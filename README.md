@@ -70,6 +70,7 @@ positional arguments:
 
 optional arguments:
   -h, --help  show this help message and exit
+
 ~ python tests/test_multi_functions.py sub --help
 usage: argumentize sub [-h] --a A [--b B]
 
@@ -79,3 +80,8 @@ optional arguments:
   --b B       b
 
 ```
+
+## TODOs
+
+[ ] docstring parsing
+[ ] args and kwargs analyzing
