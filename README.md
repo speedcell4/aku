@@ -83,5 +83,5 @@ optional arguments:
 
 ## TODOs
 
-[ ] docstring parsing
-[ ] args and kwargs analyzing
+- [ ] docstring parsing
+- [ ] args and kwargs analyzing
