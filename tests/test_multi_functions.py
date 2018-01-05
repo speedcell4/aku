@@ -9,8 +9,8 @@ def add(a: int, b: int = 2):
 
 
 @app.register
-def sub(a: int, b: int = 3):
-    print(f'{a} - {b} => {a - b}')
+def say_hello(name: str):
+    print(f'hello {name}')
 
 
 app.run()

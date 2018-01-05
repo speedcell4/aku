@@ -64,27 +64,27 @@ your argument parser interface will looks like,
 
 ```bash
 ~ python tests/test_multi_functions.py --help    
-usage: argumentize [-h] {add,sub} ...
+usage: argumentize [-h] {add,say_hello} ...
 
 positional arguments:
-  {add,sub}
+  {add,say_hello}
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help       show this help message and exit
 
-~ python tests/test_multi_functions.py sub --help
-usage: argumentize sub [-h] --a A [--b B]
+~ python tests/test_multi_functions.py say_hello --help
+usage: argumentize say_hello [-h] --name NAME
 
 optional arguments:
-  -h, --help  show this help message and exit
-  --a A       a (default: None)
-  --b B       b (default: 3)
+  -h, --help   show this help message and exit
+  --name NAME  name (default: None)
 
-~ python tests/test_multi_functions.py sub --a 1 
-1 - 3 => -2
+~ python tests/test_multi_functions.py say_hello --name argumentize
+hello argumentize
 ```
 
 ## TODOs
 
 - [ ] docstring parsing
 - [ ] `args` and `kwargs` analyzing
+- [ ] more friendly `FormatterClass`
