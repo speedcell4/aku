@@ -20,15 +20,13 @@ def str2bool(string: str) -> bool:
         return True
     if string.lower() in ['n', 'no', 'f', 'false', '0']:
         return False
-    raise argparse.ArgumentError(string, 'can not be converted to boolean value')
+    raise argparse.ArgumentTypeError(f'{string} can not be converted to boolean type')
 
 
 class App(object):
-    def __init__(self, prog: str = __file__, formatter_class=argparse.ArgumentDefaultsHelpFormatter) -> None:
-        self.prog = prog
-        self.formatter_class = formatter_class
-        self.argument_parser = argparse.ArgumentParser(
-            prog=self.prog, formatter_class=formatter_class)
+    def __init__(self, prog: str = __name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter) -> None:
+        self.argument_parser = argparse.ArgumentParser(prog=prog, formatter_class=formatter_class)
+        self.funcs = {}
 
     @staticmethod
     def _arg_default_annotation_stream(args, defaults, annotations):
@@ -44,11 +42,18 @@ class App(object):
             yield arg, annotations.get(arg, str), kwonlydefaults.get(arg, NoDefault())
 
     @staticmethod
-    def argdocs(func):
+    def _argdocs(func):
         docstring = inspect.getdoc(func) or ''
         return {key: value for key, value in re.findall(PATTERN, docstring)}
 
-    def argumentize(self, func):
+    def register(self, func):
+        name = func.__name__
+        if name in self.funcs:
+            raise argparse.ArgumentError(f'{name} was set already')
+        self.funcs[name] = func
+        return func
+
+    def _argumentize(self, func):
         # TODO multi functions
         self.func = func
         argspec = inspect.getfullargspec(func)
@@ -58,7 +63,7 @@ class App(object):
         kwonlyargs = argspec.kwonlyargs
         kwonlydefaults = argspec.kwonlydefaults or {}
         annotations = argspec.annotations
-        docs = self.argdocs(func)
+        docs = self._argdocs(func)
 
         stream = itertools.chain(
             reversed(list(self._arg_default_annotation_stream(args, defaults, annotations))),
@@ -69,7 +74,7 @@ class App(object):
             annotation = str2bool if annotation is bool else annotation
             if isinstance(default, NoDefault):
                 self.argument_parser.add_argument(
-                    f'--{arg}', required=True, type=annotation, help=docs.get(arg, f'{arg}')
+                    f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), required=True,
                 )
             else:
                 self.argument_parser.add_argument(
@@ -79,5 +84,7 @@ class App(object):
         return func
 
     def run(self):
+        for func in self.funcs.values():
+            self._argumentize(func)
         args = self.argument_parser.parse_args()
         return self.func(**vars(args))
