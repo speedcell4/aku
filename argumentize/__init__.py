@@ -79,13 +79,18 @@ class App(object):
                     f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), default=default,
                 )
 
+    @property
+    def subparsers(self):
+        if not hasattr(self, '_subparsers'):
+            setattr(self, '_subparsers', self._argument_parser.add_subparsers(dest='subparser_name'))
+        return getattr(self, '_subparsers')
+
     def run(self):
-        subparsers = self._argument_parser.add_subparsers(dest='subparser_name')
         for name, func in self.funcs.items():
             if len(self.funcs) == 1:
                 parser = self._argument_parser
                 self._argumentize(parser, func)
             else:
-                self._argumentize(subparsers.add_parser(name), func)
+                self._argumentize(self.subparsers.add_parser(name), func)
         args = vars(self._argument_parser.parse_args())
         return self.funcs[args.pop('subparser_name')](**args)

@@ -29,17 +29,12 @@ then `argumentize` will automatically add argument option according to your func
 
 ```bash
 ~ python tests/test_single_function.py --help 
-usage: argumentize [-h] --a A [--b B] {} ...
-
-positional arguments:
-  {}
+usage: argumentize [-h] --a A [--b B]
 
 optional arguments:
   -h, --help  show this help message and exit
   --a A       a (default: None)
   --b B       b (default: 2)
-
-
 ```
 
 if you registered more than one functions, then sub-parser will be utilized.
@@ -75,4 +70,12 @@ positional arguments:
 
 optional arguments:
   -h, --help  show this help message and exit
+~ python tests/test_multi_functions.py sub --help
+usage: argumentize sub [-h] --a A [--b B]
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --a A       a
+  --b B       b
+
 ```
