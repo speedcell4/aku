@@ -26,7 +26,8 @@ def str2bool(string: str) -> bool:
 class App(object):
     def __init__(self, prog: str = __name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter) -> None:
         self._argument_parser = argparse.ArgumentParser(prog=prog, formatter_class=formatter_class)
-        self.funcs = {}
+        self._formatter_class = formatter_class
+        self._functions = {}
 
     @staticmethod
     def _arg_default_annotation_stream(args, defaults, annotations):
@@ -48,9 +49,9 @@ class App(object):
 
     def register(self, func):
         name = func.__name__
-        if name in self.funcs:
+        if name in self._functions:
             raise argparse.ArgumentError(f'{name} was set already')
-        self.funcs[name] = func
+        self._functions[name] = func
         return func
 
     def _argumentize(self, argument_parser, func):
@@ -82,15 +83,17 @@ class App(object):
     @property
     def subparsers(self):
         if not hasattr(self, '_subparsers'):
-            setattr(self, '_subparsers', self._argument_parser.add_subparsers(dest='subparser_name'))
+            setattr(self, '_subparsers',
+                    self._argument_parser.add_subparsers(dest='subparser_name'))
         return getattr(self, '_subparsers')
 
     def run(self):
-        for name, func in self.funcs.items():
-            if len(self.funcs) == 1:
+        for name, function in self._functions.items():
+            if len(self._functions) == 1:
                 parser = self._argument_parser
-                self._argumentize(parser, func)
+                self._argumentize(parser, function)
             else:
-                self._argumentize(self.subparsers.add_parser(name), func)
+                self._argumentize(
+                    self.subparsers.add_parser(name, formatter_class=self._formatter_class), function)
         args = vars(self._argument_parser.parse_args())
-        return self.funcs[args.pop('subparser_name')](**args)
+        return self._functions[args.pop('subparser_name')](**args)

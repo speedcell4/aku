@@ -28,13 +28,14 @@ app.run()
 then `argumentize` will automatically add argument option according to your function signature.
 
 ```bash
-~ python tests/test_single_function.py --help 
+~ python tests/test_single_function.py --help    
 usage: argumentize [-h] --a A [--b B]
 
 optional arguments:
   -h, --help  show this help message and exit
   --a A       a (default: None)
   --b B       b (default: 2)
+
 ```
 
 if you registered more than one functions, then sub-parser will be utilized.
@@ -62,7 +63,7 @@ app.run()
 your argument parser interface will looks like,
 
 ```bash
-~ python tests/test_multi_functions.py --help         
+~ python tests/test_multi_functions.py --help    
 usage: argumentize [-h] {add,sub} ...
 
 positional arguments:
@@ -76,9 +77,11 @@ usage: argumentize sub [-h] --a A [--b B]
 
 optional arguments:
   -h, --help  show this help message and exit
-  --a A       a
-  --b B       b
+  --a A       a (default: None)
+  --b B       b (default: 3)
 
+~ python tests/test_multi_functions.py sub --a 1 
+1 - 3 => -2
 ```
 
 ## TODOs
