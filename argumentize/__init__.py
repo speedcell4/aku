@@ -25,7 +25,7 @@ def str2bool(string: str) -> bool:
 
 class App(object):
     def __init__(self, prog: str = __name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter) -> None:
-        self.argument_parser = argparse.ArgumentParser(prog=prog, formatter_class=formatter_class)
+        self._argument_parser = argparse.ArgumentParser(prog=prog, formatter_class=formatter_class)
         self.funcs = {}
 
     @staticmethod
@@ -53,9 +53,7 @@ class App(object):
         self.funcs[name] = func
         return func
 
-    def _argumentize(self, func):
-        # TODO multi functions
-        self.func = func
+    def _argumentize(self, argument_parser, func):
         argspec = inspect.getfullargspec(func)
 
         args = argspec.args
@@ -73,18 +71,21 @@ class App(object):
         for arg, annotation, default in stream:
             annotation = str2bool if annotation is bool else annotation
             if isinstance(default, NoDefault):
-                self.argument_parser.add_argument(
+                argument_parser.add_argument(
                     f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), required=True,
                 )
             else:
-                self.argument_parser.add_argument(
+                argument_parser.add_argument(
                     f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), default=default,
                 )
 
-        return func
-
     def run(self):
-        for func in self.funcs.values():
-            self._argumentize(func)
-        args = self.argument_parser.parse_args()
-        return self.func(**vars(args))
+        subparsers = self._argument_parser.add_subparsers(dest='subparser_name')
+        for name, func in self.funcs.items():
+            if len(self.funcs) == 1:
+                parser = self._argument_parser
+                self._argumentize(parser, func)
+            else:
+                self._argumentize(subparsers.add_parser(name), func)
+        args = vars(self._argument_parser.parse_args())
+        return self.funcs[args.pop('subparser_name')](**args)
