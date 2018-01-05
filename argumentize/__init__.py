@@ -2,6 +2,7 @@ import argparse
 import inspect
 import itertools
 import re
+from .annotations import boolean
 
 __all__ = [
     'App',
@@ -13,14 +14,6 @@ PATTERN = re.compile(r'^:param (?P<param>\w+): (?P<doc>.*)$', re.MULTILINE)
 
 class NoDefault(object):
     pass
-
-
-def str2bool(string: str) -> bool:
-    if string.lower() in ['y', 'yes', 't', 'true', '1']:
-        return True
-    if string.lower() in ['n', 'no', 'f', 'false', '0']:
-        return False
-    raise argparse.ArgumentTypeError(f'{string} can not be converted to boolean type')
 
 
 class App(object):
@@ -50,7 +43,7 @@ class App(object):
     def register(self, func):
         name = func.__name__
         if name in self._functions:
-            raise argparse.ArgumentError(f'{name} was set already')
+            raise argparse.ArgumentTypeError(f'{name} was set already')
         self._functions[name] = func
         return func
 
@@ -70,14 +63,14 @@ class App(object):
         )
 
         for arg, annotation, default in stream:
-            annotation = str2bool if annotation is bool else annotation
+            annotation = boolean if annotation is bool else annotation
             if isinstance(default, NoDefault):
                 argument_parser.add_argument(
                     f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), required=True,
                 )
             else:
                 argument_parser.add_argument(
-                    f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), default=default,
+                    f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), default=annotation(default),
                 )
 
     @property
@@ -96,4 +89,6 @@ class App(object):
                 self._argumentize(
                     self.subparsers.add_parser(name, formatter_class=self._formatter_class), function)
         args = vars(self._argument_parser.parse_args())
+        if len(self._functions) == 1:
+            return self._functions.popitem()[1](**args)
         return self._functions[args.pop('subparser_name')](**args)

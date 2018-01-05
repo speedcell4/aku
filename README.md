@@ -88,3 +88,5 @@ hello argumentize
 - [ ] docstring parsing
 - [ ] `args` and `kwargs` analyzing
 - [ ] more friendly `FormatterClass`
+- [ ] dependency amazon parameters
+- [ ] unit tests and Travis CI
