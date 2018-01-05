@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 # TODO multiline docstring
-PATTERN = re.compile('^:param (?P<param>\w+): (?P<doc>.*)$', re.MULTILINE)
+PATTERN = re.compile(r'^:param (?P<param>\w+): (?P<doc>.*)$', re.MULTILINE)
 
 
 class NoDefault(object):
@@ -45,7 +45,8 @@ class App(object):
 
     @staticmethod
     def argdocs(func):
-        return {key: value for key, value in re.findall(PATTERN, inspect.getdoc(func))}
+        docstring = inspect.getdoc(func) or ''
+        return {key: value for key, value in re.findall(PATTERN, docstring)}
 
     def argumentize(self, func):
         # TODO multi functions
@@ -80,21 +81,3 @@ class App(object):
     def run(self):
         args = self.argument_parser.parse_args()
         return self.func(**vars(args))
-
-
-if __name__ == '__main__':
-    app = App()
-
-
-    @app.argumentize
-    def add(a: int, b: int = 2):
-        """
-        sum two integers up
-        :param a: the first integer
-        :param b: another integer
-        """
-        print(a + b)
-        return a + b
-
-
-    app.run()
