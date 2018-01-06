@@ -1,14 +1,14 @@
 import argparse
 import pathlib
-from typing import Union
+from typing import Union, Optional
 
 __all__ = [
     'boolean', 'Path',
 ]
 
 
-def boolean(argument: Union[str, bool]) -> bool:
-    if isinstance(argument, bool):
+def boolean(argument: Optional[Union[str, bool]]) -> bool:
+    if argument is None or isinstance(argument, bool):
         return argument
     if argument.lower() in ['y', 'yes', 't', 'true', '1']:
         return True
@@ -18,14 +18,15 @@ def boolean(argument: Union[str, bool]) -> bool:
 
 
 def Path(ensure: bool = False, mkdir: bool = False, expanduser: bool = False, absolute: bool = False):
-    def generate_path(argument: Union[str, pathlib.Path]) -> pathlib.Path:
-        if isinstance(argument, pathlib.Path):
+    def generate_path(argument: Optional[Union[str, pathlib.Path]]) -> pathlib.Path:
+        if argument is None or isinstance(argument, pathlib.Path):
             return argument
         path = pathlib.Path(argument)
         if ensure and not path.exists():
             if mkdir:
                 path.mkdir(parents=True, exist_ok=True)
-            raise argparse.ArgumentError(argument, 'does not exists')
+            else:
+                raise argparse.ArgumentError(argument, 'does not exists')
         if expanduser:
             path = path.expanduser()
         if absolute:

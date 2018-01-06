@@ -19,4 +19,10 @@ def mkdir(p: Path(ensure=True, mkdir=True) = 'out'):
     print(p)
 
 
+@app.register
+def ensure(p: Path(ensure=True) = 'out'):
+    print(p)
+    # TODO why this not work
+
+
 app.run()
