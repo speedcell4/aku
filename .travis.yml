@@ -6,3 +6,4 @@ python:
 os:
   - linux
   - osx
+sudo: required
