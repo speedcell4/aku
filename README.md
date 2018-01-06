@@ -1,5 +1,7 @@
 # argumentize
 
+[![Build Status](https://travis-ci.org/speedcell4/argumentize.svg?branch=master)](https://travis-ci.org/speedcell4/argumentize)
+
 setup your argument parser rapidly
 
 ## Installation
