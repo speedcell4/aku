@@ -4,6 +4,4 @@ script: python tests/test_single_function.py --help
 python:
   - "3.6"
 os:
-  - linux
   - osx
-sudo: required
