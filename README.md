@@ -92,3 +92,5 @@ hello argumentize
 - [ ] more friendly `FormatterClass`
 - [ ] dependency relationship among parameters
 - [ ] unit tests and Travis CI
+- [ ] register type converter function
+- [ ] builder pattern, e.g. @then @final \[@when]
