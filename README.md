@@ -7,7 +7,7 @@ setup your argument parser rapidly
 ## Installation
 
 ```bash
-python3.6 -m pip install https://github.com/speedcell4/argumentize.git --upgrade
+python3.6 -m pip install git+https://github.com/speedcell4/argumentize.git --upgrade
 ```
 
 ## Usage

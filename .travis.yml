@@ -5,3 +5,4 @@ python:
   - "3.6"
 os:
   - osx
+sudo: required
