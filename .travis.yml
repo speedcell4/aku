@@ -1,8 +1,7 @@
 language: python
 install: python setup.py install
 script: python tests/test_single_function.py --help
-python:
-  - "3.6"
-os:
-  - osx
-sudo: required
+python: 3.6
+os: linux
+group: stable
+dist: trusty
