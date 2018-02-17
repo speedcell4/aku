@@ -1,6 +1,6 @@
-import argumentize
+import aku
 
-app = argumentize.App()
+app = aku.App()
 
 
 @app.register
@@ -13,4 +13,10 @@ def say_hello(name: str):
     print(f'hello {name}')
 
 
-app.run()
+@app.register
+def miao(nice: ['aaa', 'bbb']):
+    print(nice)
+
+
+if __name__ == '__main__':
+    app.run()

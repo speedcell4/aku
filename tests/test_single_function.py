@@ -1,6 +1,6 @@
-import argumentize
+import aku
 
-app = argumentize.App()
+app = aku.App()
 
 
 @app.register

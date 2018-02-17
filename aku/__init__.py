@@ -3,7 +3,7 @@ import inspect
 import itertools
 import re
 
-from .annotations import boolean
+from .annotations import boolean, list_tuple
 
 __all__ = [
     'App',
@@ -48,7 +48,7 @@ class App(object):
         self._functions[name] = func
         return func
 
-    def _argumentize(self, argument_parser, func):
+    def _aku(self, argument_parser, func):
         argspec = inspect.getfullargspec(func)
 
         args = argspec.args
@@ -64,15 +64,22 @@ class App(object):
         )
 
         for arg, annotation, default in stream:
+            kwargs = {}
+
             annotation = boolean if annotation is bool else annotation
+
+            if isinstance(annotation, (list, tuple)):
+                annotation, choices = list_tuple(annotation)
+                kwargs['choices'] = choices
+
+            kwargs['type'] = annotation
+            kwargs['help'] = docs.get(arg, f'{arg}')
             if isinstance(default, NoDefault):
-                argument_parser.add_argument(
-                    f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), required=True,
-                )
+                kwargs['required'] = True
             else:
-                argument_parser.add_argument(
-                    f'--{arg}', type=annotation, help=docs.get(arg, f'{arg}'), default=annotation(default),
-                )
+                kwargs['default'] = annotation(default)
+
+            argument_parser.add_argument(f'--{arg}', **kwargs)
 
     @property
     def subparsers(self):
@@ -85,9 +92,9 @@ class App(object):
         for name, function in self._functions.items():
             if len(self._functions) == 1:
                 parser = self._argument_parser
-                self._argumentize(parser, function)
+                self._aku(parser, function)
             else:
-                self._argumentize(
+                self._aku(
                     self.subparsers.add_parser(name, formatter_class=self._formatter_class), function)
         args = vars(self._argument_parser.parse_args())
         if len(self._functions) == 1:

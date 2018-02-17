@@ -1,9 +1,9 @@
 from setuptools import setup
 
 setup(
-    name='argumentize',
+    name='aku',
     version='0.1.0',
-    packages=['argumentize'],
+    packages=['aku'],
     url='',
     license='MIT',
     author='speedcell',

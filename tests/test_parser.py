@@ -1,6 +1,6 @@
-import argumentize
+import aku
 import pathlib
-from argumentize.annotations import Path, boolean
+from aku.annotations import Path, boolean
 
 
 class Parser(object):

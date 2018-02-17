@@ -1,22 +1,22 @@
-# argumentize
+# aku
 
-[![Build Status](https://travis-ci.org/speedcell4/argumentize.svg?branch=master)](https://travis-ci.org/speedcell4/argumentize)
+[![Build Status](https://travis-ci.org/speedcell4/aku.svg?branch=master)](https://travis-ci.org/speedcell4/aku)
 
-setup your argument parser rapidly
+setup your argument parser speedily
 
 ## Installation
 
 ```bash
-python3.6 -m pip install git+https://github.com/speedcell4/argumentize.git --upgrade
+python3.6 -m pip install git+https://github.com/speedcell4/aku.git --upgrade
 ```
 
 ## Usage
 
 ```python
 # file test_single_function.py
-import argumentize
+import aku
 
-app = argumentize.App()
+app = aku.App()
 
 
 @app.register
@@ -27,11 +27,11 @@ def add(a: int, b: int = 2):
 app.run()
 ```
 
-then `argumentize` will automatically add argument option according to your function signature.
+then `aku` will automatically add argument option according to your function signature.
 
 ```bash
 ~ python tests/test_single_function.py --help    
-usage: argumentize [-h] --a A [--b B]
+usage: aku [-h] --a A [--b B]
 
 optional arguments:
   -h, --help  show this help message and exit
@@ -44,9 +44,9 @@ if you registered more than one functions, then sub-parser will be utilized.
 
 ```python
 # file test_multi_functions.py
-import argumentize
+import aku
 
-app = argumentize.App()
+app = aku.App()
 
 
 @app.register
@@ -66,7 +66,7 @@ your argument parser interface will looks like,
 
 ```bash
 ~ python tests/test_multi_functions.py --help    
-usage: argumentize [-h] {add,say_hello} ...
+usage: aku [-h] {add,say_hello} ...
 
 positional arguments:
   {add,say_hello}
@@ -75,14 +75,14 @@ optional arguments:
   -h, --help       show this help message and exit
 
 ~ python tests/test_multi_functions.py say_hello --help
-usage: argumentize say_hello [-h] --name NAME
+usage: aku say_hello [-h] --name NAME
 
 optional arguments:
   -h, --help   show this help message and exit
   --name NAME  name (default: None)
 
-~ python tests/test_multi_functions.py say_hello --name argumentize
-hello argumentize
+~ python tests/test_multi_functions.py say_hello --name aku
+hello aku
 ```
 
 ## TODOs

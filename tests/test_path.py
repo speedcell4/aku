@@ -1,7 +1,7 @@
-import argumentize
-from argumentize.annotations import Path
+import aku
+from aku.annotations import Path
 
-app = argumentize.App()
+app = aku.App()
 
 
 @app.register
