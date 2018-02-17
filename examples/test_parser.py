@@ -1,5 +1,5 @@
-import aku
 import pathlib
+
 from aku.annotations import Path, boolean
 
 

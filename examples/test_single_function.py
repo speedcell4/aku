@@ -8,4 +8,5 @@ def add(a: int, b: int = 2):
     print(f'{a} + {b} => {a + b}')
 
 
-app.run()
+if __name__ == '__main__':
+    app.run()

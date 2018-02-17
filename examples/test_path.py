@@ -25,4 +25,5 @@ def ensure(p: Path(ensure=True) = 'out'):
     # TODO why this not work
 
 
-app.run()
+if __name__ == '__main__':
+    app.run()
