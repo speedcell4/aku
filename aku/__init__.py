@@ -96,7 +96,7 @@ class App(object):
             else:
                 self._aku(
                     self.subparsers.add_parser(name, formatter_class=self._formatter_class), function)
-        args = vars(self._argument_parser.parse_args())
+        self.args = vars(self._argument_parser.parse_args())
         if len(self._functions) == 1:
-            return self._functions.popitem()[1](**args)
-        return self._functions[args.pop('subparser_name')](**args)
+            return self._functions.popitem()[1](**self.args)
+        return self._functions[self.args.pop('subparser_name')](**self.args)
