@@ -2,11 +2,20 @@ from setuptools import setup
 
 setup(
     name='aku',
-    version='0.1.0',
+    description='let your ideas take flight, aku made (飽くまで)',
+    version=open('VRESION', mode='r').read(),
     packages=['aku'],
-    url='',
+    classifiers=[
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3 :: Only',
+        'Development Status :: 2 - Pre-Alpha',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Unix',
+        'Topic :: Utilities',
+    ],
+    url='https://github.com/speedcell4/aku',
     license='MIT',
-    author='speedcell',
+    author='Izen',
     author_email='speedcell4@gmail.com',
-    description='setup your argument parser rapidly',
 )
