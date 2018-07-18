@@ -7,7 +7,7 @@ setup your argument parser speedily
 ## Installation
 
 ```bash
-python3.6 -m pip install git+https://github.com/speedcell4/aku.git --upgrade
+python3.6 -m pip install aku --upgrade
 ```
 
 ## Usage
