@@ -8,4 +8,4 @@ git:
 python:
   - "3.6"
 script:
-  - python tests/test_single_function.py --help
+  - python ${TRAVIS_BUILD_DIR}/examples/test_single_function.py --help
