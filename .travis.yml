@@ -1,7 +1,11 @@
 language: python
-install: python setup.py install
-script: python tests/test_single_function.py --help
-python: 3.6
-os: linux
-group: stable
+sudo: required
 dist: trusty
+cache: pip
+git:
+  depth: 3
+  quiet: true
+python:
+  - "3.6"
+script:
+  - python tests/test_single_function.py --help
