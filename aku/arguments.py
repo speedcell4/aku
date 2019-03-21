@@ -58,6 +58,4 @@ class Argument(object):
 
 def expand_function(func, parser: ArgumentParser, prefix: str = None, *args, **kwargs):
     for annotation in get_annotations(func):
-        print(annotation)
-        argument = Argument[annotation]
-        argument(parser=parser, prefix=prefix, *args, **kwargs)
+        Argument[annotation](parser=parser, prefix=prefix, *args, **kwargs)
