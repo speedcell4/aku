@@ -31,6 +31,13 @@ def is_value_union(retype) -> bool:
     return False
 
 
+def is_function_union(retype) -> bool:
+    if isinstance(retype, tuple):
+        if all(callable(t) for t in retype):
+            return True
+    return False
+
+
 def get_annotations(func: Callable, only_with_default: bool = False):
     annotations = typing.get_type_hints(func)
     spec = inspect.getfullargspec(func)

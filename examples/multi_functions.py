@@ -34,4 +34,17 @@ def mod(r: (1, 2, 3) = 3):
     print(f'r => {r}')
 
 
+def iadd(x: int, y: int):
+    return x + y
+
+
+def sadd(a: str, b: str):
+    return a + b
+
+
+@aku.register
+def nice(work: (iadd, sadd)):
+    print(f'work => {work}')
+
+
 aku.run()

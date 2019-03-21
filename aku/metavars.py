@@ -19,4 +19,4 @@ def render_type(retype) -> Optional[str]:
     if is_value_union(retype):
         return None
 
-    return f'{retype.__name__}'.capitalize()
+    return f'{retype.__name__}'

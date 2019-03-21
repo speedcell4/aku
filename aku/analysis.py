@@ -35,5 +35,6 @@ class Aku(object):
                 func = self.functions[sys.argv[1]]
                 expand_function(func, parsers[sys.argv[1]])
 
+        self.parser.parse_known_args(args=args, namespace=namespace)
         kwargs = self.parser.parse_args(args=args, namespace=namespace)
         return func(**kwargs.__dict__)
