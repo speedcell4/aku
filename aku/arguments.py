@@ -143,7 +143,7 @@ def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, *
                 parser.parse_known_args()
 
     parser.add_argument(
-        f'--{choose_dest_name}', default=default, help=desc,
+        f'--{dest_name}', dest=choose_dest_name, default=default, help=desc,
         choices=function_map.keys(), action=ChooseFunctionAction,
         type=get_parsing_fn(str), prefix=name,
     )
@@ -151,7 +151,7 @@ def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, *
     return dest_name
 
 
-def add_argument(func, parser: ArgumentParser, prefix: str = None, **kwargs) -> List[str]:
+def add_argument(func, parser: ArgumentParser, prefix: str = None, **kwargs) -> List:
     names = []
     for annotation in get_annotations(func):
         ok = False

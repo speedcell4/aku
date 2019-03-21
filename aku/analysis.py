@@ -47,7 +47,8 @@ class Aku(object):
             tgt, src = zip(*params)
             kwargs[name] = functools.partial(
                 kwargs[name], **{
-                    t: kwargs[s] if keep else kwargs.pop(s) for t, s in zip(tgt, src)
+                    t: kwargs[s] if keep else kwargs.pop(s)
+                    for t, s in zip(tgt, src)
                 }
             )
             if not keep:
