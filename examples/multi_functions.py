@@ -6,45 +6,46 @@ aku = Aku()
 
 
 @aku.register
-def add(a: int, b: float):
+def foo(a: int, b: float):
     print(f'a => {a}')
     print(f'b => {b}')
 
 
 @aku.register
-def sub(x: int, y: float = None):
+def bar(x: int, y: float = None):
     print(f'x => {x}')
     print(f'y => {y}')
 
 
 @aku.register
-def mul(g: typing.Union[int, str] = 2, h: bool = False):
+def baz(g: typing.Union[int, str] = 2, h: bool = False):
     print(f'g => {g}')
     print(f'h => {h}')
 
 
 @aku.register
-def div(w: typing.List[int] = [1, 2], k: typing.Tuple[float, ...] = (2.0, 3.0)):
+def qux(w: typing.List[int] = [1, 2], k: typing.Tuple[float, ...] = (2.0, 3.0)):
     print(f'w => {w}')
     print(f'k => {k}')
 
 
 @aku.register
-def mod(r: (1, 2, 3) = 3):
+def quux(r: (1, 2, 3) = 3):
     print(f'r => {r}')
 
 
-def iadd(x: int, y: int):
+def add(x: int, y: int):
     return x + y
 
 
-def sadd(a: str, b: str):
-    return a + b
+def sub(x: float, y: float):
+    return x - y
 
 
 @aku.register
-def nice(work: (iadd, sadd)):
-    print(f'work => {work}')
+def corge(name: str = 'aku', cal: (add, sub) = add):
+    print(f'hello {name}')
+    print(f'cal() => {cal()}')
 
 
 aku.run()

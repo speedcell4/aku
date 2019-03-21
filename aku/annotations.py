@@ -5,3 +5,4 @@ class ValueUnion(type):
 
 if __name__ == '__main__':
     print(ValueUnion[1, 2, 3])
+

@@ -50,4 +50,7 @@ class Aku(object):
                     t: kwargs[s] if keep else kwargs.pop(s) for t, s in zip(tgt, src)
                 }
             )
+            if not keep:
+                kwargs.pop(f'{name}_choose')
+
         return func(**kwargs)
