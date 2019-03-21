@@ -4,7 +4,7 @@ from aku.parsers import get_parsing_fn
 
 
 def test_str2null():
-    func = get_parsing_fn(None)
+    func = get_parsing_fn(type(None))
 
     assert func('nil') is None
     assert func('null') is None
