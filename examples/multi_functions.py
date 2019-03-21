@@ -29,4 +29,9 @@ def div(w: typing.List[int] = [1, 2], k: typing.Tuple[float, ...] = (2.0, 3.0)):
     print(f'k => {k}')
 
 
+@aku.register
+def mod(r: (1, 2, 3) = 3):
+    print(f'r => {r}')
+
+
 aku.run()

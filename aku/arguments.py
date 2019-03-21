@@ -3,7 +3,7 @@ from typing import Tuple
 
 from aku.metavars import render_type
 from aku.parsers import get_parsing_fn
-from aku.utils import get_annotations, is_list, is_homo_tuple
+from aku.utils import get_annotations, is_homo_tuple, is_list, is_value_union
 
 EXECUTED = '__AKU_EXECUTED'
 
@@ -25,7 +25,7 @@ def get_option_name(name, prefix):
 class Argument(object):
     _none_primitive_arguments = []
 
-    def __init__(self, name, parsing_fn, metavar, default, desc, action='store'):
+    def __init__(self, name, parsing_fn, metavar, default, desc, action='store', choices=None):
         super(Argument, self).__init__()
         self.name = name
         self.parsing_fn = parsing_fn
@@ -33,6 +33,7 @@ class Argument(object):
         self.default = default
         self.desc = desc
         self.action = action
+        self.choices = choices
 
     def __init_subclass__(cls, **kwargs):
         cls._none_primitive_arguments.append(cls)
@@ -41,7 +42,7 @@ class Argument(object):
         return parser.add_argument(
             get_option_name(self.name, prefix), action=self.action,
             default=self.default, type=self.parsing_fn,
-            help=self.desc, metavar=self.metavar,
+            help=self.desc, metavar=self.metavar, choices=self.choices,
         )
 
     def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
@@ -108,6 +109,20 @@ class HomoTupleArgument(Argument):
             name=name, default=default, desc=desc,
             parsing_fn=get_parsing_fn(retype),
             metavar=render_type(annotation),
+        )
+
+
+class ValueUnionArgument(Argument):
+    def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
+        name, annotation, default, desc = annotation
+        if not is_value_union(annotation):
+            raise ValueError
+
+        retype = type(annotation[0])
+        return cls(
+            name=name, default=default, desc=desc,
+            parsing_fn=get_parsing_fn(retype),
+            metavar=render_type(annotation), choices=annotation,
         )
 
 
