@@ -1,7 +1,7 @@
 import typing
 from typing import Type
 
-from aku.utils import get_annotations, is_union
+from aku.utils import is_union, get_annotations
 from tests.utils import Circle, Point
 
 
