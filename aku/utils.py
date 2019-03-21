@@ -17,6 +17,13 @@ def is_list(retype) -> bool:
     return getattr(retype, '_name', None) == 'List'
 
 
+def is_homo_tuple(retype) -> bool:
+    if getattr(retype, '_name', None) == 'Tuple':
+        if retype.__args__.__len__() == 2 and ... in retype.__args__:
+            return True
+    return False
+
+
 def get_annotations(func: Callable, only_with_default: bool = False):
     annotations = typing.get_type_hints(func)
     spec = inspect.getfullargspec(func)

@@ -1,6 +1,6 @@
 from typing import Union
 
-from aku.utils import is_optional, is_union, is_list
+from aku.utils import is_optional, is_union, is_list, is_homo_tuple
 
 
 def render_type(retype) -> str:
@@ -13,5 +13,8 @@ def render_type(retype) -> str:
     if is_list(retype):
         args = render_type(retype.__args__[0])
         return f'[{args}]'
+    if is_homo_tuple(retype):
+        args = render_type(retype.__args__[0])
+        return f'({args})'
 
     return f'{retype.__name__}'.capitalize()

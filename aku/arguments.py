@@ -3,7 +3,7 @@ from typing import Tuple
 
 from aku.metavars import render_type
 from aku.parsers import get_parsing_fn
-from aku.utils import get_annotations, is_list
+from aku.utils import get_annotations, is_list, is_homo_tuple
 
 EXECUTED = '__AKU_EXECUTED'
 
@@ -78,7 +78,33 @@ class ListArgument(Argument):
             raise ValueError
 
         retype = annotation.__args__[0]
-        return ListArgument(
+        return cls(
+            name=name, default=default, desc=desc,
+            parsing_fn=get_parsing_fn(retype),
+            metavar=render_type(annotation),
+        )
+
+
+class TupleAppendAction(Action):
+    def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string) -> None:
+        if not getattr(self, EXECUTED, False):
+            setattr(self, EXECUTED, True)
+            setattr(namespace, self.dest, ())
+        setattr(namespace, self.dest, (*getattr(namespace, self.dest), values))
+
+
+class HomoTupleArgument(Argument):
+    def __init__(self, *args, **kwargs):
+        super(HomoTupleArgument, self).__init__(*args, **kwargs)
+        self.action = TupleAppendAction
+
+    def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
+        name, annotation, default, desc = annotation
+        if not is_homo_tuple(annotation):
+            raise ValueError
+
+        retype = annotation.__args__[0]
+        return cls(
             name=name, default=default, desc=desc,
             parsing_fn=get_parsing_fn(retype),
             metavar=render_type(annotation),

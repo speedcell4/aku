@@ -24,7 +24,7 @@ def mul(g: typing.Union[int, str] = 2, h: bool = False):
 
 
 @aku.register
-def div(w: typing.List[int] = [1, 2], k: typing.List[float] = [0.2]):
+def div(w: typing.List[int] = [1, 2], k: typing.Tuple[float, ...] = (2.0, 3.0)):
     print(f'w => {w}')
     print(f'k => {k}')
 
