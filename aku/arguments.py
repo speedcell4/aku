@@ -1,9 +1,11 @@
-from argparse import ArgumentParser
+from argparse import Action, ArgumentParser, Namespace
 from typing import Tuple
 
 from aku.metavars import render_type
 from aku.parsers import get_parsing_fn
-from aku.utils import get_annotations
+from aku.utils import get_annotations, is_list
+
+EXECUTED = '__AKU_EXECUTED'
 
 
 def append_prefix(prefix1, prefix2):
@@ -23,28 +25,29 @@ def get_option_name(name, prefix):
 class Argument(object):
     _none_primitive_arguments = []
 
-    def __init__(self, name, parsing_fn, metavar, default, desc):
+    def __init__(self, name, parsing_fn, metavar, default, desc, action='store'):
         super(Argument, self).__init__()
         self.name = name
         self.parsing_fn = parsing_fn
         self.metavar = metavar
         self.default = default
         self.desc = desc
+        self.action = action
 
     def __init_subclass__(cls, **kwargs):
         cls._none_primitive_arguments.append(cls)
 
     def __call__(self, parser: ArgumentParser, prefix, *args, **kwargs):
         return parser.add_argument(
-            get_option_name(self.name, prefix), action='store',
+            get_option_name(self.name, prefix), action=self.action,
             default=self.default, type=self.parsing_fn,
-            required=True, help=self.desc, metavar=self.metavar,
+            help=self.desc, metavar=self.metavar,
         )
 
     def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
         for argument in cls._none_primitive_arguments:
             try:
-                return argument(*annotation)
+                return argument[annotation]
             except ValueError:
                 pass
 
@@ -52,6 +55,32 @@ class Argument(object):
         return cls(
             name=name, default=default, desc=desc,
             parsing_fn=get_parsing_fn(annotation),
+            metavar=render_type(annotation),
+        )
+
+
+class ListAppendAction(Action):
+    def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string) -> None:
+        if not getattr(self, EXECUTED, False):
+            setattr(self, EXECUTED, True)
+            setattr(namespace, self.dest, [])
+        setattr(namespace, self.dest, [*getattr(namespace, self.dest), values])
+
+
+class ListArgument(Argument):
+    def __init__(self, *args, **kwargs):
+        super(ListArgument, self).__init__(*args, **kwargs)
+        self.action = ListAppendAction
+
+    def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
+        name, annotation, default, desc = annotation
+        if not is_list(annotation):
+            raise ValueError
+
+        retype = annotation.__args__[0]
+        return ListArgument(
+            name=name, default=default, desc=desc,
+            parsing_fn=get_parsing_fn(retype),
             metavar=render_type(annotation),
         )
 

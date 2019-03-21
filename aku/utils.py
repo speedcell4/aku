@@ -13,6 +13,10 @@ def is_optional(retype) -> bool:
     return is_union(retype) and type(None) in getattr(retype, '__args__', [])
 
 
+def is_list(retype) -> bool:
+    return getattr(retype, '_name', None) == 'List'
+
+
 def get_annotations(func: Callable, only_with_default: bool = False):
     annotations = typing.get_type_hints(func)
     spec = inspect.getfullargspec(func)
