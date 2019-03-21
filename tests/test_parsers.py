@@ -1,3 +1,5 @@
+import argparse
+
 import pytest
 
 from aku.parsers import get_parsing_fn
@@ -10,11 +12,11 @@ def test_str2null():
     assert func('null') is None
     assert func('none') is None
 
-    with pytest.raises(ValueError):
+    with pytest.raises(argparse.ArgumentTypeError):
         assert func('nil2') is None
-    with pytest.raises(ValueError):
+    with pytest.raises(argparse.ArgumentTypeError):
         assert func('null3') is None
-    with pytest.raises(ValueError):
+    with pytest.raises(argparse.ArgumentTypeError):
         assert func('none4') is None
 
 
@@ -33,7 +35,7 @@ def test_str2bool():
     assert func('yeS') is True
     assert func('y') is True
 
-    with pytest.raises(ValueError):
+    with pytest.raises(argparse.ArgumentTypeError):
         assert func('yess') is None
-    with pytest.raises(ValueError):
+    with pytest.raises(argparse.ArgumentTypeError):
         assert func('n0') is None
