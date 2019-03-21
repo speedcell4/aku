@@ -1,4 +1,4 @@
-from argparse import Action, ArgumentParser, Namespace
+from argparse import Action, ArgumentParser, ArgumentError, Namespace
 from typing import Tuple
 
 from aku.metavars import render_type
@@ -22,42 +22,22 @@ def get_option_name(name, prefix):
     return f'--{name}'
 
 
-class Argument(object):
-    _none_primitive_arguments = []
+_argument_fn = []
 
-    def __init__(self, name, parsing_fn, metavar, default, desc, action='store', choices=None):
-        super(Argument, self).__init__()
-        self.name = name
-        self.parsing_fn = parsing_fn
-        self.metavar = metavar
-        self.default = default
-        self.desc = desc
-        self.action = action
-        self.choices = choices
 
-    def __init_subclass__(cls, **kwargs):
-        cls._none_primitive_arguments.append(cls)
+def register_argument_fn(func):
+    _argument_fn.append(func)
+    return func
 
-    def __call__(self, parser: ArgumentParser, prefix, *args, **kwargs):
-        return parser.add_argument(
-            get_option_name(self.name, prefix), action=self.action,
-            default=self.default, type=self.parsing_fn,
-            help=self.desc, metavar=self.metavar, choices=self.choices,
-        )
 
-    def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
-        for argument in cls._none_primitive_arguments:
-            try:
-                return argument[annotation]
-            except ValueError:
-                pass
+@register_argument_fn
+def add_primitive(parser: ArgumentParser, annotation: Tuple, prefix: str):
+    name, annotation, default, desc = annotation
 
-        name, annotation, default, desc = annotation
-        return cls(
-            name=name, default=default, desc=desc,
-            parsing_fn=get_parsing_fn(annotation),
-            metavar=render_type(annotation),
-        )
+    parser.add_argument(
+        get_option_name(name, prefix), default=default, help=desc,
+        type=get_parsing_fn(annotation), metavar=render_type(annotation),
+    )
 
 
 class ListAppendAction(Action):
@@ -68,25 +48,21 @@ class ListAppendAction(Action):
         setattr(namespace, self.dest, [*getattr(namespace, self.dest), values])
 
 
-class ListArgument(Argument):
-    def __init__(self, *args, **kwargs):
-        super(ListArgument, self).__init__(*args, **kwargs)
-        self.action = ListAppendAction
+@register_argument_fn
+def add_list(parser: ArgumentParser, annotation: Tuple, prefix: str):
+    name, annotation, default, desc = annotation
+    if not is_list(annotation):
+        raise TypeError
 
-    def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
-        name, annotation, default, desc = annotation
-        if not is_list(annotation):
-            raise ValueError
-
-        retype = annotation.__args__[0]
-        return cls(
-            name=name, default=default, desc=desc,
-            parsing_fn=get_parsing_fn(retype),
-            metavar=render_type(annotation),
-        )
+    retype = annotation.__args__[0]
+    parser.add_argument(
+        get_option_name(name, prefix), default=default, help=desc,
+        type=get_parsing_fn(retype), metavar=render_type(annotation),
+        action=ListAppendAction,
+    )
 
 
-class TupleAppendAction(Action):
+class HomoTupleAppendAction(Action):
     def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string) -> None:
         if not getattr(self, EXECUTED, False):
             setattr(self, EXECUTED, True)
@@ -94,38 +70,42 @@ class TupleAppendAction(Action):
         setattr(namespace, self.dest, (*getattr(namespace, self.dest), values))
 
 
-class HomoTupleArgument(Argument):
-    def __init__(self, *args, **kwargs):
-        super(HomoTupleArgument, self).__init__(*args, **kwargs)
-        self.action = TupleAppendAction
+@register_argument_fn
+def add_homo_tuple(parser: ArgumentParser, annotation: Tuple, prefix: str):
+    name, annotation, default, desc = annotation
+    if not is_homo_tuple(annotation):
+        raise TypeError
 
-    def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
-        name, annotation, default, desc = annotation
-        if not is_homo_tuple(annotation):
-            raise ValueError
-
-        retype = annotation.__args__[0]
-        return cls(
-            name=name, default=default, desc=desc,
-            parsing_fn=get_parsing_fn(retype),
-            metavar=render_type(annotation),
-        )
+    retype = annotation.__args__[0]
+    parser.add_argument(
+        get_option_name(name, prefix), default=default, help=desc,
+        type=get_parsing_fn(retype), metavar=render_type(annotation),
+        action=HomoTupleAppendAction,
+    )
 
 
-class ValueUnionArgument(Argument):
-    def __class_getitem__(cls, annotation: Tuple) -> 'Argument':
-        name, annotation, default, desc = annotation
-        if not is_value_union(annotation):
-            raise ValueError
+@register_argument_fn
+def add_value_union(parser: ArgumentParser, annotation: Tuple, prefix: str):
+    name, annotation, default, desc = annotation
+    if not is_value_union(annotation):
+        raise TypeError
 
-        retype = type(annotation[0])
-        return cls(
-            name=name, default=default, desc=desc,
-            parsing_fn=get_parsing_fn(retype),
-            metavar=render_type(annotation), choices=annotation,
-        )
+    retype = type(annotation[0])
+    parser.add_argument(
+        get_option_name(name, prefix), default=default, help=desc,
+        type=get_parsing_fn(retype), choices=annotation,
+    )
 
 
-def expand_function(func, parser: ArgumentParser, prefix: str = None, *args, **kwargs):
+def expand_function(func, parser: ArgumentParser, prefix: str = None):
     for annotation in get_annotations(func):
-        Argument[annotation](parser=parser, prefix=prefix, *args, **kwargs)
+        ok = False
+        for argument_fn in _argument_fn[::-1]:
+            try:
+                argument_fn(parser=parser, annotation=annotation, prefix=prefix)
+                ok = True
+                break
+            except TypeError:
+                pass
+        if not ok:
+            raise ArgumentError(f'{annotation[0]} : {annotation[1]} does not fail into any category')
