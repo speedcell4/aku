@@ -1,3 +1,4 @@
+import argparse
 import inspect
 from typing import Any, Callable, Type
 
@@ -24,9 +25,9 @@ def get_parsing_fn(retype: Type) -> Callable[[str], Any]:
             for fn in getattr(retype, '__args__', []):
                 try:
                     return get_parsing_fn(fn)(option_string)
-                except ValueError:
+                except (ValueError, argparse.ArgumentTypeError):
                     pass
-            raise ValueError
+            raise argparse.ArgumentTypeError
 
         return parsing_fn
 
@@ -38,7 +39,7 @@ def str2null(option_string: str) -> type(None):
     option_string = option_string.strip().lower()
     if option_string in ('nil', 'null', 'none'):
         return None
-    raise ValueError(f'"{option_string}" can not be parsed as null value')
+    raise argparse.ArgumentTypeError(f'"{option_string}" can not be parsed as null value')
 
 
 @register_parsing_fn
@@ -48,4 +49,4 @@ def str2bool(option_string: str) -> bool:
         return True
     if option_string in ('0', 'f', 'false', 'n', 'no'):
         return False
-    raise ValueError(f'"{option_string}" can not be parsed as boolean value')
+    raise argparse.ArgumentTypeError(f'"{option_string}" can not be parsed as boolean value')
