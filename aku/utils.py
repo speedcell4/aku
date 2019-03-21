@@ -14,8 +14,8 @@ def is_optional(retype) -> bool:
 
 
 def get_annotations(func: Callable, only_with_default: bool = False):
+    annotations = typing.get_type_hints(func)
     spec = inspect.getfullargspec(func)
-    annotations = spec.annotations
     args = spec.args
     defaults = spec.defaults or []
 

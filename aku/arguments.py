@@ -49,7 +49,6 @@ class Argument(object):
                 pass
 
         name, annotation, default, desc = annotation
-        print(f'annotation => {annotation}')
         return cls(
             name=name, default=default, desc=desc,
             parsing_fn=get_parsing_fn(annotation),
@@ -57,7 +56,8 @@ class Argument(object):
         )
 
 
-def expand_function(func, parser: ArgumentParser, prefix: str, *args, **kwargs):
+def expand_function(func, parser: ArgumentParser, prefix: str = None, *args, **kwargs):
     for annotation in get_annotations(func):
+        print(annotation)
         argument = Argument[annotation]
         argument(parser=parser, prefix=prefix, *args, **kwargs)
