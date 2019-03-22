@@ -1,4 +1,4 @@
-from argparse import Action, ArgumentError, ArgumentParser, Namespace
+from argparse import Action, ArgumentParser, ArgumentTypeError, Namespace
 from typing import List, Tuple
 
 from aku.metavars import render_type
@@ -164,5 +164,7 @@ def add_argument(func, parser: ArgumentParser, prefix: str = None, **kwargs) -> 
             except TypeError:
                 pass
         if not ok:
-            raise ArgumentError(f'{annotation[0]} : {annotation[1]} does not fail into any category')
+            raise ArgumentTypeError(
+                f'"{annotation[0]} : {annotation[1]}" does not fail into any annotation category.'
+            )
     return names
