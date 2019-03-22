@@ -1,3 +1,5 @@
+import inspect
+
 import torch
 from torch import nn
 import sys
@@ -53,22 +55,22 @@ class Encoder(nn.Module):
         return torch.cat([h[0], h[1]], dim=-1)
 
 
-class OutputLayer(nn.Module):
+class LinearClassifier(nn.Module):
     def __init__(self, *, num_targets, encoder_layer: Encoder):
-        super(OutputLayer, self).__init__()
+        super(LinearClassifier, self).__init__()
         self.fc = nn.Linear(
             encoder_layer.encoding_dim,
             num_targets,
         )
 
     def forward(self, inputs):
-        return super(OutputLayer, self).forward(inputs)
+        return super(LinearClassifier, self).forward(inputs)
 
 
 class Model(nn.Module):
-    def __init__(self, embedding_layer: (TokenEmbedding, ),
-                 encoder_layer: (Encoder, ),
-                 output_layer: (OutputLayer, ), *,
+    def __init__(self, embedding_layer: Type[Union[TokenEmbedding]],
+                 encoder_layer: Type[Union[Encoder]],
+                 output_layer: Type[Union[LinearClassifier]], *,
                  word_vocab: Vocab, target_vocab: Vocab):
         super(Model, self).__init__()
         self.embedding_layer = embedding_layer(
@@ -124,7 +126,8 @@ app = Aku()
 
 
 @app.register
-def train(task: (sst, ), model: (Model, ), optimizer: (sgd, adam), num_epochs: int = 20, **kwargs):
+def train(task: Type[Union[sst]], model: Type[Union[Model]],
+          optimizer: Type[Union[sgd, adam]], num_epochs: int = 20, **kwargs):
     train, dev, test = task()
     word_vocab = train.dataset.fields['text'].vocab
     target_vocab = train.dataset.fields['label'].vocab
@@ -141,7 +144,3 @@ def train(task: (sst, ), model: (Model, ), optimizer: (sgd, adam), num_epochs: i
             loss.backward()
             print(f'loss => {loss.item():.4f}')
             optimizer.step()
-
-
-if __name__ == '__main__':
-    app.run()

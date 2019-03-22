@@ -3,10 +3,11 @@ import argparse
 import pytest
 
 from aku.parsers import get_parsing_fn
+from aku.utils import NoneType
 
 
 def test_str2null():
-    func = get_parsing_fn(type(None))
+    func = get_parsing_fn(NoneType)
 
     assert func('nil') is None
     assert func('null') is None

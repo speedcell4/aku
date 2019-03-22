@@ -3,6 +3,7 @@ import inspect
 from typing import Any, Callable, Type
 
 from aku import utils
+from aku.utils import NoneType
 
 _parsing_fn = {}
 
@@ -35,7 +36,7 @@ def get_parsing_fn(retype: Type) -> Callable[[str], Any]:
 
 
 @register_parsing_fn
-def str2null(option_string: str) -> type(None):
+def str2null(option_string: str) -> NoneType:
     option_string = option_string.strip().lower()
     if option_string in ('nil', 'null', 'none'):
         return None

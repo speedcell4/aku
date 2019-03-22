@@ -1,14 +1,15 @@
 from argparse import Action, ArgumentParser, ArgumentTypeError, Namespace
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from aku.metavars import render_type
 from aku.parsers import get_parsing_fn
-from aku.utils import get_annotations, is_function_union, is_homo_tuple, is_list, is_value_union
+from aku.utils import get_annotations, is_function_union, is_homo_tuple, \
+    is_list, is_value_union, unwrap_function_union, unwrap_homo_tuple, unwrap_list, unwrap_value_union
 
-EXECUTED = '__AKU_EXECUTED'
+EXECUTED = '_AKU_EXECUTED'
 
 
-def append_prefix(prefix1, prefix2):
+def append_prefix(prefix1: Optional[str], prefix2: Optional[str]) -> Optional[str]:
     if prefix1 is None:
         return prefix2
     if prefix2 is None:
@@ -16,7 +17,7 @@ def append_prefix(prefix1, prefix2):
     return f'{prefix1}_{prefix2}'
 
 
-def get_dest_name(name, prefix):
+def get_dest_name(name: str, prefix: Optional[str]) -> str:
     if prefix is not None:
         return f'{prefix}_{name}'
     return f'{name}'
@@ -58,7 +59,7 @@ def add_list(parser: ArgumentParser, annotation: Tuple, prefix: str, **kwargs):
     if not is_list(annotation):
         raise TypeError
 
-    retype = annotation.__args__[0]
+    retype = unwrap_list(annotation)
     parser.add_argument(
         f'--{dest_name}', default=default, help=desc,
         type=get_parsing_fn(retype), metavar=render_type(annotation),
@@ -72,7 +73,9 @@ class HomoTupleAppendAction(Action):
     def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string) -> None:
         if not getattr(self, EXECUTED, False):
             setattr(self, EXECUTED, True)
+            print(namespace)
             setattr(namespace, self.dest, ())
+            print(namespace)
         setattr(namespace, self.dest, (*getattr(namespace, self.dest), values))
 
 
@@ -83,7 +86,7 @@ def add_homo_tuple(parser: ArgumentParser, annotation: Tuple, prefix: str, **kwa
     if not is_homo_tuple(annotation):
         raise TypeError
 
-    retype = annotation.__args__[0]
+    retype = unwrap_homo_tuple(annotation)
     parser.add_argument(
         f'--{dest_name}', default=default, help=desc,
         type=get_parsing_fn(retype), metavar=render_type(annotation),
@@ -100,7 +103,7 @@ def add_value_union(parser: ArgumentParser, annotation: Tuple, prefix: str, **kw
     if not is_value_union(annotation):
         raise TypeError
 
-    retype = type(annotation[0])
+    retype = unwrap_value_union(annotation)
     parser.add_argument(
         f'--{dest_name}', default=default, help=desc,
         type=get_parsing_fn(retype), choices=annotation,
@@ -114,21 +117,13 @@ def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, *
     name, annotation, default, desc = annotation
     if not is_function_union(annotation):
         raise TypeError
-    if isinstance(annotation, tuple):
-        USE_PREFIX = True
-    else:
-        USE_PREFIX = False
 
-    if USE_PREFIX:
-        dest_name = get_dest_name(f'{name}', prefix)
-        choose_dest_name = get_dest_name(f'{name}_choose', prefix)
-    else:
-        dest_name = get_dest_name(f'{name}', None)
-        choose_dest_name = get_dest_name(f'{name}_choose', None)
+    dest_name = get_dest_name(f'{name}', prefix)
+    choose_dest_name = get_dest_name(f'{name}_choose', prefix)
 
     function_map = {
         f.__name__: f
-        for f in annotation
+        for f in unwrap_function_union(annotation)
     }
 
     class ChooseFunctionAction(Action):
@@ -143,8 +138,7 @@ def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, *
                 setattr(namespace, self.dest, values)
                 names = add_argument(
                     func=function_map[values], parser=self.group,
-                    prefix=append_prefix(prefix, self.prefix) if USE_PREFIX else prefix,
-                    **kwargs,
+                    prefix=prefix, **kwargs,
                 )
                 parser.set_defaults(**{
                     dest_name: function_map[values],
@@ -153,9 +147,10 @@ def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, *
                 parser.parse_known_args()
 
     group = parser.add_argument_group(name)
+
     group.add_argument(
         f'--{dest_name}', dest=choose_dest_name, default=default, help=desc,
-        choices=function_map.keys(), action=ChooseFunctionAction,
+        choices=list(function_map.keys()), action=ChooseFunctionAction,
         type=get_parsing_fn(str), prefix=name, group=group,
     )
 

@@ -1,4 +1,5 @@
 import typing
+from typing import Union, Type
 
 from aku.analysis import Aku
 
@@ -43,7 +44,7 @@ def sub(x: float, y: float):
 
 
 @aku.register
-def corge(name: str = 'aku', cal: (add, sub) = add):
+def corge(name: str = 'aku', cal: Type[Union[add, sub]] = add):
     print(f'hello {name}')
     print(f'cal() => {cal()}')
 
