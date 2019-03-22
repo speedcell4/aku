@@ -9,6 +9,6 @@ git:
   quiet: true
 python: 3.7
 install:
-  - python -m pip install pytest
+  - python -m pip install pytest pytest-conv codecov
 script:
-  - python -m pytest tests
+  - python -m pytest tests --cov-report term --cov aku
