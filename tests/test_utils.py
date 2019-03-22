@@ -2,7 +2,7 @@ import typing
 from argparse import SUPPRESS
 from typing import Type, Union, Optional
 
-from aku.utils import get_annotations, unwrap_function_union, is_function_union, is_union, is_optional
+from aku.utils import get_annotations, unwrap_function_union, is_function_union, is_union, is_optional, render_type
 from tests.utils import Circle, Point
 
 
@@ -60,4 +60,14 @@ def test_unwrap_function_union():
     assert unwrap_function_union(Type[Union[Point, Circle]]) == (Circle, Point)
     assert unwrap_function_union(Type[Union[Point]]) == (Point,)
     assert unwrap_function_union(Type[Point]) == (Point,)
-2
+
+
+def test_render_parser():
+    assert render_type(int) == 'Int'
+    assert render_type(float) == 'Float'
+    assert render_type(bool) == 'Bool'
+    assert render_type(str) == 'Str'
+
+    assert render_type(Optional[int]) == 'Int?'
+    assert render_type(Union[int, str]) == '{Int, Str}'
+    assert render_type(Optional[Union[int, str]]) == '{Int, Str}?'

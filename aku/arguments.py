@@ -1,10 +1,9 @@
 from argparse import Action, ArgumentParser, ArgumentTypeError, Namespace
 from typing import List, Optional, Tuple
 
-from aku.metavars import render_type
 from aku.parsers import get_parsing_fn
 from aku.utils import get_annotations, is_function_union, is_homo_tuple, \
-    is_list, is_value_union, unwrap_function_union, unwrap_homo_tuple, unwrap_list, unwrap_value_union
+    is_list, is_value_union, unwrap_function_union, unwrap_homo_tuple, unwrap_list, unwrap_value_union, render_type
 
 EXECUTED = '_AKU_EXECUTED'
 

@@ -2,7 +2,7 @@ import inspect
 import typing
 from argparse import SUPPRESS
 from itertools import zip_longest
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 
 NoneType = type(None)
 
@@ -98,3 +98,22 @@ def get_annotations(func: Callable, only_with_default: bool = False):
         return [(name, annotations.get(name, str), default, f'{name}')
                 for name, default in zip_longest(args[::-1], defaults[::-1], fillvalue=SUPPRESS)
                 ][::-1]
+
+
+def render_type(retype) -> Optional[str]:
+    if is_optional(retype):
+        args = render_type(unwrap_optional(retype))
+        return f'{args}?'
+    if is_union(retype):
+        args = ', '.join(render_type(a) for a in unwrap_union(retype))
+        return f'{{{args}}}'
+    if is_list(retype):
+        args = render_type(unwrap_list(retype))
+        return f'[{args}]'
+    if is_homo_tuple(retype):
+        args = render_type(unwrap_homo_tuple(retype))
+        return f'({args})'
+    if is_value_union(retype):
+        return None
+
+    return f'{retype.__name__}'.capitalize()
