@@ -39,10 +39,18 @@ def is_function_union(retype) -> bool:
 
 
 def get_annotations(func: Callable, only_with_default: bool = False):
+    if inspect.isclass(func) or inspect.ismethod(func):
+        remove_first = True
+    else:
+        remove_first = False
+
     annotations = typing.get_type_hints(func)
     spec = inspect.getfullargspec(func)
     args = spec.args
     defaults = spec.defaults or []
+
+    if remove_first:
+        args = args[1:]
 
     if only_with_default:
         return [(name, annotations.get(name, str), default, f'{name}')
