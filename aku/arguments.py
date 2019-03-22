@@ -123,16 +123,17 @@ def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, *
     }
 
     class ChooseFunctionAction(Action):
-        def __init__(self, *args, prefix, **kwargs):
+        def __init__(self, *args, prefix, group, **kwargs):
             super(ChooseFunctionAction, self).__init__(*args, **kwargs)
             self.prefix = prefix
+            self.group = group
 
         def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string) -> None:
             if not getattr(self, EXECUTED, False):
                 setattr(self, EXECUTED, True)
                 setattr(namespace, self.dest, values)
                 names = add_argument(
-                    func=function_map[values], parser=parser,
+                    func=function_map[values], parser=self.group,
                     prefix=append_prefix(prefix, self.prefix),
                     **kwargs,
                 )
@@ -142,10 +143,11 @@ def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, *
                 kwargs.get('slots').append((dest_name, names))
                 parser.parse_known_args()
 
-    parser.add_argument(
+    group = parser.add_argument_group(name)
+    group.add_argument(
         f'--{dest_name}', dest=choose_dest_name, default=default, help=desc,
         choices=function_map.keys(), action=ChooseFunctionAction,
-        type=get_parsing_fn(str), prefix=name,
+        type=get_parsing_fn(str), prefix=name, group=group,
     )
 
     return dest_name
