@@ -12,3 +12,5 @@ install:
   - python -m pip install pytest pytest-cov codecov
 script:
   - python -m pytest tests --cov-report term --cov aku
+after_success:
+  - codecov
