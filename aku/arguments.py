@@ -112,10 +112,19 @@ def add_value_union(parser: ArgumentParser, annotation: Tuple, prefix: str, **kw
 @register_argument_fn
 def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, **kwargs):
     name, annotation, default, desc = annotation
-    dest_name = get_dest_name(f'{name}', prefix)
-    choose_dest_name = get_dest_name(f'{name}_choose', prefix)
     if not is_function_union(annotation):
         raise TypeError
+    if isinstance(annotation, tuple):
+        USE_PREFIX = True
+    else:
+        USE_PREFIX = False
+
+    if USE_PREFIX:
+        dest_name = get_dest_name(f'{name}', prefix)
+        choose_dest_name = get_dest_name(f'{name}_choose', prefix)
+    else:
+        dest_name = get_dest_name(f'{name}', None)
+        choose_dest_name = get_dest_name(f'{name}_choose', None)
 
     function_map = {
         f.__name__: f
@@ -134,7 +143,7 @@ def add_function_union(parser: ArgumentParser, annotation: Tuple, prefix: str, *
                 setattr(namespace, self.dest, values)
                 names = add_argument(
                     func=function_map[values], parser=self.group,
-                    prefix=append_prefix(prefix, self.prefix),
+                    prefix=append_prefix(prefix, self.prefix) if USE_PREFIX else prefix,
                     **kwargs,
                 )
                 parser.set_defaults(**{
