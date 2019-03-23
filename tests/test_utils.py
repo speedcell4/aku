@@ -62,12 +62,12 @@ def test_unwrap_function_union():
     assert unwrap_function_union(Type[Point]) == (Point,)
 
 
-def test_render_parser():
+def test_render_type():
     assert render_type(int) == 'Int'
     assert render_type(float) == 'Float'
     assert render_type(bool) == 'Bool'
     assert render_type(str) == 'Str'
 
     assert render_type(Optional[int]) == 'Int?'
-    assert render_type(Union[int, str]) == '{Int, Str}'
-    assert render_type(Optional[Union[int, str]]) == '{Int, Str}?'
+    assert render_type(Union[int, str]) == '{Int,Str}'
+    assert render_type(Optional[Union[int, str]]) == '{Int,Str}?'
