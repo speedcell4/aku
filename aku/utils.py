@@ -2,7 +2,7 @@ import inspect
 import typing
 from argparse import SUPPRESS
 from itertools import zip_longest
-from typing import Callable, Union, Optional
+from typing import Callable, Optional, Union
 
 NoneType = type(None)
 
@@ -105,7 +105,7 @@ def render_type(retype) -> Optional[str]:
         args = render_type(unwrap_optional(retype))
         return f'{args}?'
     if is_union(retype):
-        args = ', '.join(render_type(a) for a in unwrap_union(retype))
+        args = ','.join(render_type(a) for a in unwrap_union(retype))
         return f'{{{args}}}'
     if is_list(retype):
         args = render_type(unwrap_list(retype))
