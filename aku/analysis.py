@@ -4,7 +4,7 @@ import inspect
 import sys
 from typing import Callable
 
-from aku.arguments import add_argument
+from aku.arguments import add_function
 
 
 class Aku(object):
@@ -27,7 +27,7 @@ class Aku(object):
         slots = []
         if self.functions.__len__() == 1:
             func = list(self.functions.values())[0]
-            add_argument(self.parser, self.parser, func, slots=slots)
+            add_function(self.parser, self.parser, func, slots=slots)
         else:
             subparsers = self.parser.add_subparsers()
             parsers = {
@@ -36,7 +36,7 @@ class Aku(object):
             }
             if sys.argv.__len__() > 1 and sys.argv[1] in parsers:
                 func = self.functions[sys.argv[1]]
-                add_argument(parsers[sys.argv[1]], parsers[sys.argv[1]], func, slots=slots)
+                add_function(parsers[sys.argv[1]], parsers[sys.argv[1]], func, slots=slots)
 
         namespace, args = self.parser.parse_known_args(args=args, namespace=namespace)
         kwargs = vars(self.parser.parse_args(args=args, namespace=namespace))

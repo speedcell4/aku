@@ -129,37 +129,37 @@ def add_function_union(parser: ArgumentParser, arguments: ArgumentParser,
     }
 
     class ChooseFunctionAction(Action):
-        def __init__(self, *args, prefix, group, **kwargs):
+        def __init__(self, *args, prefix, arguments, **kwargs):
             super(ChooseFunctionAction, self).__init__(*args, **kwargs)
             self.prefix = prefix
-            self.group = group
+            self.arguments = arguments
 
         def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string) -> None:
             if not getattr(self, EXECUTED, False):
                 setattr(self, EXECUTED, True)
                 setattr(namespace, self.dest, values)
-                names = add_argument(
-                    parser=parser, arguments=self.group,
+                names = add_function(
+                    parser=parser, arguments=self.arguments,
                     func=function_map[values], prefix=prefix, **kwargs,
                 )
                 parser.set_defaults(**{
                     option_name: function_map[values],
                 })
-                kwargs.get('slots').append((option_name, names))
+                if option_name != names:
+                    kwargs.get('slots').append((option_name, names))
                 parser.parse_known_args()
 
-    group = parser.add_argument_group(name)
-
-    group.add_argument(
+    arguments = parser.add_argument_group(name)
+    arguments.add_argument(
         f'--{option_name}', dest=dest_name, default=default, help=desc,
         choices=list(function_map.keys()), action=ChooseFunctionAction,
-        type=get_parsing_fn(str), prefix=name, group=group,
+        type=get_parsing_fn(str), prefix=name, arguments=arguments,
     )
 
     return option_name
 
 
-def add_argument(parser: ArgumentParser, arguments: ArgumentParser,
+def add_function(parser: ArgumentParser, arguments: ArgumentParser,
                  func, prefix: str = None, **kwargs) -> List:
     names = []
     for annotation in get_annotations(func):
