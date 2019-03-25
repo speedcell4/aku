@@ -1,8 +1,8 @@
 import typing
 from argparse import SUPPRESS
-from typing import Type, Union, Optional
+from typing import Optional, Type, Union
 
-from aku.utils import get_annotations, unwrap_function_union, is_function_union, is_union, is_optional, render_type
+from aku.utils import get_annotations, is_function_union, is_union, render_type, unwrap_function_union
 from tests.utils import Circle, Point
 
 
@@ -71,3 +71,5 @@ def test_render_type():
     assert render_type(Optional[int]) == 'Int?'
     assert render_type(Union[int, str]) == '{Int,Str}'
     assert render_type(Optional[Union[int, str]]) == '{Int,Str}?'
+
+
