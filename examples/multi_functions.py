@@ -16,12 +16,11 @@ def foo(a: int = 1, b: float = 2, c: complex = 3 + 4j, d: bool = True, e: str = 
 
 
 @aku.register
-def bar(a: int = None, b: float = None, c: complex = None, d: bool = None, e: str = None):
+def bar(a: int = None, b: float = None, c: complex = None, d: bool = None):
     print(f'a => {a}')
     print(f'b => {b}')
     print(f'c => {c}')
     print(f'd => {d}')
-    print(f'e => {e}')
 
 
 @aku.register

@@ -34,7 +34,9 @@ def strings(draw):
 
 
 @st.composite
-def null(draw):
+def optional(draw, strategy):
+    if draw(st.booleans()):
+        return draw(strategy)
     r = draw(st.sampled_from(['nil', 'none', 'null']))
     return r, None
 
@@ -53,6 +55,34 @@ def foo(a: int = 1, b: float = 2, c: complex = 3 + 4j, d: bool = True, e: str = 
 def test_foo(a, b, d, e):
     app = Aku()
     app.register(foo)
+    ret = app.run([
+        '--a', f'{a[0]}',
+        '--b', f'{b[0]}',
+        # '--c', f'{c[0]}',
+        '--d', f'{d[0]}',
+        '--e', f'{e[0]}',
+    ])
+    assert ret['a'] == a[1]
+    assert ret['b'] == b[1]
+    assert ret['d'] == d[1]
+    assert ret['e'] == e[1]
+
+
+# TODO there does not exist optional[str]?
+def bar(a: int = None, b: float = None, c: complex = None, d: bool = None, e: str = None):
+    return locals()
+
+
+@given(
+    a=optional(integers()),
+    b=optional(floats()),  # TODO check option
+    # c=st.complex_numbers(min_magnitude=0),
+    d=optional(booleans()),
+    e=strings(),
+)
+def test_bar(a, b, d, e):
+    app = Aku()
+    app.register(bar)
     ret = app.run([
         '--a', f'{a[0]}',
         '--b', f'{b[0]}',
