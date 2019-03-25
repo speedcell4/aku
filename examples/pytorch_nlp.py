@@ -1,37 +1,33 @@
-import inspect
+from typing import Type, Union
 
 import torch
-from torch import nn
-import sys
-import logging
-from logging import Logger
-import math, random
-from pathlib import Path
-
-from typing import Union, Optional, List, Tuple, NamedTuple, Set, Dict, Callable
-from typing import Generator, Iterable, KeysView, ValuesView, ItemsView, Any, Type, NewType
-
-import numpy as np
-from colorlog import colorlog
-
-import torch
-from torch import Tensor
-from torch.nn import init
-from torch.nn import functional as F
-from torch.utils.data import Dataset, DataLoader, sampler
-from torch import nn, cuda, initial_seed, autograd, optim, distributions
-from torch.nn.utils.rnn import PackedSequence, pack_sequence, pack_padded_sequence, pad_sequence, pad_packed_sequence
-
-from torchtext.vocab import Vocab, SubwordVocab
-from torchtext.data import Field, SubwordField, LabelField, NestedField, Dataset, Iterator, Example, Batch
-
-from torchtext.datasets import SST
+import torchtext
+from torch import nn, optim
+from torchtext.data import Field, Iterator
 from torchtext.vocab import Vocab
+
 from aku import Aku
 
 
+class SST(torchtext.datasets.SST):
+    @classmethod
+    def iters(cls, batch_size=32, device=0, root='.data', vectors=None, **kwargs):
+        TEXT = Field(batch_first=True)
+        LABEL = Field(batch_first=True, sequential=False)
+
+        train, val, test = cls.splits(TEXT, LABEL, root=root, **kwargs)
+
+        TEXT.build_vocab(train, vectors=vectors)
+        LABEL.build_vocab(train)
+
+        return Iterator.splits(
+            (train, val, test), device=device,
+            batch_size=batch_size, sort=False, sort_within_batch=True,
+        )
+
+
 class TokenEmbedding(nn.Embedding):
-    def __init__(self, dim: int, *, vocab: Vocab):
+    def __init__(self, dim: int = 100, *, vocab: Vocab):
         super(TokenEmbedding, self).__init__(
             num_embeddings=vocab.stoi.__len__(),
             embedding_dim=dim, padding_idx=vocab.stoi.get('<pad>', None),
@@ -39,7 +35,8 @@ class TokenEmbedding(nn.Embedding):
 
 
 class Encoder(nn.Module):
-    def __init__(self, hidden_dim: int, num_layers: int, bias: bool, *, embedding_layer: nn.Embedding):
+    def __init__(self, hidden_dim: int = 200, num_layers: int = 1, bias: bool = True,
+                 *, embedding_layer: nn.Embedding):
         super(Encoder, self).__init__()
         self.rnn = nn.LSTM(
             input_size=embedding_layer.embedding_dim,
@@ -64,14 +61,15 @@ class LinearClassifier(nn.Module):
         )
 
     def forward(self, inputs):
-        return super(LinearClassifier, self).forward(inputs)
+        return self.fc(inputs)
 
 
 class Model(nn.Module):
     def __init__(self, embedding_layer: Type[Union[TokenEmbedding]],
                  encoder_layer: Type[Union[Encoder]],
                  output_layer: Type[Union[LinearClassifier]], *,
-                 word_vocab: Vocab, target_vocab: Vocab):
+                 word_vocab: Vocab, target_vocab: Vocab = None
+                 ):
         super(Model, self).__init__()
         self.embedding_layer = embedding_layer(
             vocab=word_vocab,
@@ -85,23 +83,23 @@ class Model(nn.Module):
         )
 
         self.criterion = nn.CrossEntropyLoss(
-            ignore_index=target_vocab.stoi.get('<pad>', None),
+            ignore_index=target_vocab.stoi.get('<pad>', -100),
             reduction='mean',
         )
 
     def forward(self, batch):
-        embedding = self.embedding_layer(batch.word)
+        embedding = self.embedding_layer(batch.text)
         encoding = self.encoder_layer(embedding)
         outputs = self.output_layer(encoding)
         return outputs
 
     def fit(self, batch):
         outputs = self(batch)
-        return self.criterion(outputs, batch.target)
+        return self.criterion(outputs, batch.label)
 
     def transform(self, batch):
         outputs = self(batch)
-        return self.criterion(outputs, batch.target), outputs
+        return self.criterion(outputs, batch.label), outputs
 
 
 def sst(batch_size: int = 10):
@@ -144,3 +142,6 @@ def train(task: Type[Union[sst]], model: Type[Union[Model]],
             loss.backward()
             print(f'loss => {loss.item():.4f}')
             optimizer.step()
+
+
+app.run()

@@ -76,28 +76,27 @@ def unwrap_function_union(retype):
     return retype.__args__
 
 
-def get_annotations(func: Callable, only_with_default: bool = False):
+def get_annotations(func: Callable):
     if inspect.isclass(func) or inspect.ismethod(func):
         remove_first = True
     else:
         remove_first = False
 
-    annotations = typing.get_type_hints(func)
     spec = inspect.getfullargspec(func)
-    args = spec.args
-    defaults = spec.defaults or []
+    args, defaults, annotations = spec.args, spec.defaults, spec.annotations
+    if defaults is None:
+        defaults = []
 
     if remove_first:
         args = args[1:]
 
-    if only_with_default:
-        return [(name, annotations.get(name, str), default, f'{name}')
-                for name, default in zip(args[::-1], defaults[::-1])
-                ][::-1]
-    else:
-        return [(name, annotations.get(name, str), default, f'{name}')
-                for name, default in zip_longest(args[::-1], defaults[::-1], fillvalue=SUPPRESS)
-                ][::-1]
+    ret = []
+    for name, default in zip_longest(args[::-1], defaults[::-1], fillvalue=SUPPRESS):
+        annotation = annotations.get(name, str)
+        if default is None:
+            annotation = Optional[annotation]
+        ret.append((name, annotation, default, f'{name}'))
+    return ret[::-1]
 
 
 def render_type(retype) -> Optional[str]:

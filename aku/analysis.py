@@ -27,7 +27,7 @@ class Aku(object):
         slots = []
         if self.functions.__len__() == 1:
             func = list(self.functions.values())[0]
-            add_argument(func, self.parser, slots=slots)
+            add_argument(self.parser, self.parser, func, slots=slots)
         else:
             subparsers = self.parser.add_subparsers()
             parsers = {
@@ -36,20 +36,19 @@ class Aku(object):
             }
             if sys.argv.__len__() > 1 and sys.argv[1] in parsers:
                 func = self.functions[sys.argv[1]]
-                add_argument(func, parsers[sys.argv[1]], slots=slots)
+                add_argument(parsers[sys.argv[1]], parsers[sys.argv[1]], func, slots=slots)
 
-        kwargs1, _ = self.parser.parse_known_args(args=args, namespace=namespace)
-        kwargs2 = self.parser.parse_args(args=args, namespace=namespace)
-        kwargs = {**vars(kwargs2), **vars(kwargs1)}
+        namespace, args = self.parser.parse_known_args(args=args, namespace=namespace)
+        kwargs = vars(self.parser.parse_args(args=args, namespace=namespace))
 
         keep = inspect.getfullargspec(func).varkw is not None
 
         for name, params in slots[::-1]:
-            tgt, src = zip(*params)
+            # tgt, src = zip(*params)
             kwargs[name] = functools.partial(
                 kwargs[name], **{
                     t: kwargs[s] if keep else kwargs.pop(s)
-                    for t, s in zip(tgt, src)
+                    for t, s in params
                 }
             )
             if not keep:
