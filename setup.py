@@ -1,12 +1,16 @@
-from setuptools import setup
+from setuptools import setup, find_packages
+
+with open('README.md', 'r', encoding='utf-8') as fp:
+    long_description = fp.read()
 
 setup(
     name='aku',
-    description='let your ideas take flight, aku made (飽くまで)',
+    description='Annotation-driven ArgumentParser Generator',
+    long_description=long_description,
     version=open('VERSION', mode='r').read(),
-    packages=['aku'],
+    packages=find_packages(),
     classifiers=[
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3 :: Only',
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: MIT License',
@@ -18,4 +22,5 @@ setup(
     license='MIT',
     author='Izen',
     author_email='speedcell4@gmail.com',
+    python_requires='>=3.7',
 )

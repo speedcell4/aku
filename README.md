@@ -1,6 +1,8 @@
 # aku
 
+[![PyPI Version](https://badge.fury.io/py/aku.svg)](https://pypi.org/project/aku/)
 [![Build Status](https://travis-ci.org/speedcell4/aku.svg?branch=master)](https://travis-ci.org/speedcell4/aku)
+[![Code Coverage](https://codecov.io/gh/speedcell4/aku/branch/master/graph/badge.svg)](https://codecov.io/gh/speedcell4/aku)
 
 setup your argument parser speedily
 
