@@ -1,5 +1,6 @@
+import inspect
 from string import ascii_letters
-from typing import Union
+from typing import List, Tuple, Union
 
 from hypothesis import given, strategies as st
 
@@ -117,3 +118,36 @@ def test_baz(a, b, c):
     assert ret['a'] == a[1]
     assert ret['b'] == b[1]
     assert ret['c'] == c[1]
+
+
+def qux(a: List[int] = [6, 7], b: Tuple[float, ...] = (8.0, 9.0)):
+    return locals()
+
+
+@given(
+    a=st.lists(integers()),
+    b=st.lists(floats()),
+)
+def test_qux(a, b):
+    if len(a) == 0:
+        a_reprs, a_values = [], inspect.getfullargspec(qux).defaults[0]
+    else:
+        a_reprs, a_values = map(list, zip(*a))
+
+    if len(b) == 0:
+        b_reprs, b_values = (), inspect.getfullargspec(qux).defaults[1]
+    else:
+        b_reprs, b_values = map(tuple, zip(*b))
+
+    app = Aku()
+    app.register(qux)
+
+    args = []
+    for a_repr in a_reprs:
+        args.extend(['--a', f'{a_repr}'])
+    for b_repr in b_reprs:
+        args.extend(['--b', f'{b_repr}'])
+    ret = app.run(args)
+
+    assert ret['a'] == a_values
+    assert ret['b'] == b_values

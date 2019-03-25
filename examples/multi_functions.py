@@ -1,5 +1,4 @@
-import typing
-from typing import Type, Union
+from typing import List, Tuple, Type, Union
 
 from aku.analysis import Aku
 
@@ -31,7 +30,7 @@ def baz(a: Union[int, str] = 2, b: Union[float, float] = 3.0, c: Union[int, floa
 
 
 @aku.register
-def qux(a: typing.List[int] = [6, 7], b: typing.Tuple[float, ...] = (8.0, 9.0)):
+def qux(a: List[int] = [6, 7], b: Tuple[float, ...] = (8.0, 9.0)):
     print(f'a => {a}')
     print(f'b => {b}')
 

@@ -38,7 +38,7 @@ class Aku(object):
                 func = self.functions[sys.argv[1]]
                 add_argument(func, parsers[sys.argv[1]], slots=slots)
 
-        namespace, _ = self.parser.parse_known_args(args=args, namespace=namespace)
+        # namespace, _ = self.parser.parse_known_args(args=args, namespace=namespace)
         kwargs = self.parser.parse_args(args=args, namespace=namespace).__dict__
 
         keep = inspect.getfullargspec(func).varkw is not None
