@@ -1,4 +1,5 @@
 from string import ascii_letters
+from typing import Union
 
 from hypothesis import given, strategies as st
 
@@ -94,3 +95,25 @@ def test_bar(a, b, d, e):
     assert ret['b'] == b[1]
     assert ret['d'] == d[1]
     assert ret['e'] == e[1]
+
+
+def baz(a: Union[int, str] = 2, b: Union[float, float] = 3.0, c: Union[int, float] = None):
+    return locals()
+
+
+@given(
+    a=st.one_of(integers(), strings()),
+    b=floats(),
+    c=optional(st.one_of(integers(), floats())),
+)
+def test_baz(a, b, c):
+    app = Aku()
+    app.register(baz)
+    ret = app.run([
+        '--a', f'{a[0]}',
+        '--b', f'{b[0]}',
+        '--c', f'{c[0]}',
+    ])
+    assert ret['a'] == a[1]
+    assert ret['b'] == b[1]
+    assert ret['c'] == c[1]
