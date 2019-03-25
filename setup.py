@@ -22,4 +22,5 @@ setup(
     license='MIT',
     author='Izen',
     author_email='speedcell4@gmail.com',
+    python_requires='>=3.7',
 )
