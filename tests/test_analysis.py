@@ -1,5 +1,6 @@
 import inspect
-from typing import List, Tuple, Union, Type
+from dataclasses import dataclass
+from typing import List, Tuple, Type, TypeVar, Union
 
 from hypothesis import given, strategies as st
 
@@ -161,3 +162,60 @@ def test_corge_sub(x, y):
     ])
 
     assert ret == x[1] - y[1]
+
+
+@dataclass
+class Point(object):
+    x: int
+    y: int
+
+
+@dataclass
+class Circle(object):
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+def grault(shape: TypeVar('sh', Point, Circle)):
+    return shape()
+
+
+@given(
+    x=integers(),
+    y=integers(),
+)
+def test_grault_point(x, y):
+    app = Aku()
+    app.register(grault)
+
+    ret = app.run([
+        '--shape', 'Point',
+        '--sh_x', f'{x[0]}',
+        '--sh_y', f'{y[0]}',
+    ])
+
+    assert ret == Point(x[1], y[1])
+
+
+@given(
+    x=integers(),
+    y=integers(),
+    width=integers(),
+    height=integers(),
+
+)
+def test_grault_circle(x, y, width, height):
+    app = Aku()
+    app.register(grault)
+
+    ret = app.run([
+        '--shape', 'Circle',
+        '--sh_x', f'{x[0]}',
+        '--sh_y', f'{y[0]}',
+        '--sh_width', f'{width[0]}',
+        '--sh_height', f'{height[0]}',
+    ])
+
+    assert ret == Circle(x[1], y[1], width[1], height[1])
