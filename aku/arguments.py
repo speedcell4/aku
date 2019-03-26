@@ -1,5 +1,6 @@
 from argparse import Action, ArgumentParser, ArgumentTypeError, Namespace
 from typing import List, Optional, Tuple
+import inspect
 
 from aku.parsers import get_parsing_fn
 from aku.utils import get_annotations, is_function_union, is_homo_tuple, is_list, is_value_union, render_type, \
@@ -124,7 +125,7 @@ def add_function_union(parser: ArgumentParser, arguments: ArgumentParser,
     dest_name = get_dest_name(f'{name}_choose', prefix)
 
     function_map = {
-        f.__name__: f
+        f.__self__.__name__ if inspect.ismethod(f) else f.__name__: f
         for f in unwrap_function_union(annotation)
     }
 

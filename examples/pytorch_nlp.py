@@ -11,13 +11,13 @@ from aku import Aku
 
 class SST(torchtext.datasets.SST):
     @classmethod
-    def iters(cls, batch_size=32, device=0, root='.data', vectors=None, **kwargs):
+    def iters(cls, batch_size: int = 32, device: int = -1):
         TEXT = Field(batch_first=True)
         LABEL = Field(batch_first=True, sequential=False)
 
-        train, val, test = cls.splits(TEXT, LABEL, root=root, **kwargs)
+        train, val, test = cls.splits(TEXT, LABEL, root='.data')
 
-        TEXT.build_vocab(train, vectors=vectors)
+        TEXT.build_vocab(train)
         LABEL.build_vocab(train)
 
         return Iterator.splits(
@@ -102,10 +102,6 @@ class Model(nn.Module):
         return self.criterion(outputs, batch.label), outputs
 
 
-def sst(batch_size: int = 10):
-    return SST.iters(batch_size=batch_size, device=torch.device('cpu'))
-
-
 def sgd(lr: float = 1e-1, momentum: float = 0.0, *, model: nn.Module):
     return optim.SGD(
         params=[param for param in model.parameters() if param.requires_grad],
@@ -124,7 +120,7 @@ app = Aku()
 
 
 @app.register
-def train(task: Type[Union[sst]], model: Type[Union[Model]],
+def train(task: Type[Union[SST.iters]], model: Type[Union[Model]],
           optimizer: Type[Union[sgd, adam]], num_epochs: int = 20, **kwargs):
     train, dev, test = task()
     word_vocab = train.dataset.fields['text'].vocab
