@@ -2,7 +2,7 @@ import inspect
 import typing
 from argparse import SUPPRESS
 from itertools import zip_longest
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, TypeVar, Union
 
 NoneType = type(None)
 
@@ -74,6 +74,14 @@ def unwrap_function_union(retype):
     if is_union(retype.__args__[0]):
         return retype.__args__[0].__args__
     return retype.__args__
+
+
+def is_type_var(retype):
+    return isinstance(retype, TypeVar)
+
+
+def unwrap_type_var(retype):
+    return retype.__constraints__
 
 
 def get_annotations(func: Callable):

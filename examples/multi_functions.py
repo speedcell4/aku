@@ -1,4 +1,5 @@
-from typing import List, Tuple, Type, Union
+from dataclasses import dataclass
+from typing import List, Tuple, Type, TypeVar, Union
 
 from aku.analysis import Aku
 
@@ -51,6 +52,25 @@ def sub(x: float, y: float):
 @aku.register
 def corge(cal: Type[Union[add, sub]] = add):
     print(f'cal() => {cal()}')
+
+
+@dataclass
+class Point(object):
+    x: int
+    y: int
+
+
+@dataclass
+class Circle(object):
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+@aku.register
+def grault(shape: TypeVar('sh', Point, Circle)):
+    print(f'shape => {shape()}')
 
 
 aku.run()
