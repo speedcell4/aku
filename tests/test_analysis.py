@@ -1,5 +1,5 @@
 import inspect
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Type
 
 from hypothesis import given, strategies as st
 
@@ -115,3 +115,49 @@ def test_qux(a, b):
 
     assert ret['a'] == a_values
     assert ret['b'] == b_values
+
+
+def add(x: int, y: int):
+    return x + y
+
+
+def sub(x: int, y: int):
+    return x - y
+
+
+def corge(cal: Type[Union[add, sub]] = add):
+    return cal()
+
+
+@given(
+    x=integers(),
+    y=integers(),
+)
+def test_corge_add(x, y):
+    app = Aku()
+    app.register(corge)
+
+    ret = app.run([
+        '--cal', 'add',
+        '--x', f'{x[0]}',
+        '--y', f'{y[0]}',
+    ])
+
+    assert ret == x[1] + y[1]
+
+
+@given(
+    x=integers(),
+    y=integers(),
+)
+def test_corge_sub(x, y):
+    app = Aku()
+    app.register(corge)
+
+    ret = app.run([
+        '--cal', 'sub',
+        '--x', f'{x[0]}',
+        '--y', f'{y[0]}',
+    ])
+
+    assert ret == x[1] - y[1]

@@ -38,13 +38,13 @@ class Aku(object):
                 func = self.functions[sys.argv[1]]
                 add_function(parsers[sys.argv[1]], parsers[sys.argv[1]], func, slots=slots)
 
-        namespace, args = self.parser.parse_known_args(args=args, namespace=namespace)
-        kwargs = vars(self.parser.parse_args(args=args, namespace=namespace))
+        kwargs1, _ = self.parser.parse_known_args(args=args, namespace=namespace)
+        kwargs2 = self.parser.parse_args(args=args, namespace=namespace)
+        kwargs = {**vars(kwargs2), **vars(kwargs1)}
 
         keep = inspect.getfullargspec(func).varkw is not None
 
         for name, params in slots[::-1]:
-            # tgt, src = zip(*params)
             kwargs[name] = functools.partial(
                 kwargs[name], **{
                     t: kwargs[s] if keep else kwargs.pop(s)
