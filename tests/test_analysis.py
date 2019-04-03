@@ -171,14 +171,14 @@ class Point(object):
 
 
 @dataclass
-class Circle(object):
+class Rect(object):
     x: int
     y: int
     width: int
-    height: int
+    height: int = 2
 
 
-def grault(shape: TypeVar('sh', Point, Circle)):
+def grault(shape: TypeVar('sh', Point, Rect)):
     return shape()
 
 
@@ -191,7 +191,7 @@ def test_grault_point(x, y):
     app.register(grault)
 
     ret = app.run([
-        '--shape', 'Point',
+        '--shape', f'{Point.__name__}',
         '--sh_x', f'{x[0]}',
         '--sh_y', f'{y[0]}',
     ])
@@ -211,11 +211,11 @@ def test_grault_circle(x, y, width, height):
     app.register(grault)
 
     ret = app.run([
-        '--shape', 'Circle',
+        '--shape', f'{Rect.__name__}',
         '--sh_x', f'{x[0]}',
         '--sh_y', f'{y[0]}',
         '--sh_width', f'{width[0]}',
         '--sh_height', f'{height[0]}',
     ])
 
-    assert ret == Circle(x[1], y[1], width[1], height[1])
+    assert ret == Rect(x[1], y[1], width[1], height[1])

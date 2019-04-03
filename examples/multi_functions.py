@@ -61,15 +61,15 @@ class Point(object):
 
 
 @dataclass
-class Circle(object):
+class Rect(object):
     x: int
     y: int
     width: int
-    height: int
+    height: int = 2
 
 
 @aku.register
-def grault(shape: TypeVar('sh', Point, Circle)):
+def grault(shape: TypeVar('sh', Point, Rect)):
     print(f'shape => {shape()}')
 
 
