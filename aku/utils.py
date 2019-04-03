@@ -9,9 +9,7 @@ NoneType = type(None)
 
 def is_optional(retype) -> bool:
     if getattr(retype, '__origin__', None) is typing.Union:
-        if NoneType in retype.__args__ and len(retype.__args__) == 2:
-            return True  # Optional[T]
-        return False
+        return NoneType in retype.__args__
     return False
 
 
@@ -50,6 +48,30 @@ def unwrap_homo_tuple(retype):
     return retype.__args__[0]
 
 
+def is_type_union(retype) -> bool:
+    if getattr(retype, '_name', None) == 'Type':
+        retype = retype.__args__[0]
+        if getattr(retype, '__origin__', None) is typing.Union:
+            return all(callable(ty) for ty in retype.__args__)
+        return callable(retype)
+    return False
+
+
+def unwrap_type_union(retype):
+    retype = retype.__args__[0]
+    if getattr(retype, '__origin__', None) is typing.Union:
+        return unwrap_union(retype)
+    return retype,
+
+
+def is_type_var(retype):
+    return isinstance(retype, TypeVar)
+
+
+def unwrap_type_var(retype):
+    return retype.__constraints__
+
+
 def is_value_union(retype) -> bool:
     if isinstance(retype, tuple):
         if all(not callable(t) for t in retype):
@@ -62,36 +84,6 @@ def is_value_union(retype) -> bool:
 
 def unwrap_value_union(retype):
     return type(retype[0])
-
-
-def is_type(retype) -> bool:
-    return getattr(retype, '_name', None) == 'Type'
-
-
-def unwrap_type(retype):
-    return retype.__args__[0]
-
-
-def is_function_union(retype) -> bool:
-    if is_type(retype):
-        retype = unwrap_type(retype)
-        if is_union(retype) or callable(retype):
-            return True
-    return False
-
-
-def unwrap_function_union(retype):
-    if is_union(retype.__args__[0]):
-        return retype.__args__[0].__args__
-    return retype.__args__
-
-
-def is_type_var(retype):
-    return isinstance(retype, TypeVar)
-
-
-def unwrap_type_var(retype):
-    return retype.__constraints__
 
 
 def get_annotations(func: Callable):

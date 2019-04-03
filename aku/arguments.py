@@ -3,8 +3,8 @@ from typing import List, Optional, Tuple
 import inspect
 
 from aku.parsers import get_parsing_fn
-from aku.utils import get_annotations, is_function_union, is_homo_tuple, is_list, is_value_union, render_type, \
-    unwrap_function_union, unwrap_homo_tuple, unwrap_list, unwrap_value_union, is_type_var, unwrap_type_var
+from aku.utils import get_annotations, is_type_union, is_homo_tuple, is_list, is_value_union, render_type, \
+    unwrap_type_union, unwrap_homo_tuple, unwrap_list, unwrap_value_union, is_type_var, unwrap_type_var
 
 EXECUTED = '_AKU_EXECUTED'
 
@@ -121,10 +121,10 @@ def add_function_union(parser: ArgumentParser, arguments: ArgumentParser,
     option_name = get_dest_name(f'{name}', prefix)
     dest_name = get_dest_name(f'{name}_choose', prefix)
 
-    if is_function_union(annotation):
+    if is_type_union(annotation):
         function_map = {
             f.__self__.__name__ if inspect.ismethod(f) else f.__name__: f
-            for f in unwrap_function_union(annotation)
+            for f in unwrap_type_union(annotation)
         }
     elif is_type_var(annotation):
         prefix = append_prefix(prefix, annotation.__name__)
