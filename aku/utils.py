@@ -109,21 +109,25 @@ def get_annotations(func: Callable):
     return ret[::-1]
 
 
-def render_type(retype) -> Optional[str]:
+def metavar(retype) -> Optional[str]:
     if is_optional(retype):
-        args = render_type(unwrap_optional(retype))
+        args = metavar(unwrap_optional(retype))
         return f'{args}?'
 
     if is_union(retype):
-        args = ','.join(render_type(a) for a in unwrap_union(retype))
+        args = ','.join(metavar(a) for a in unwrap_union(retype))
         return f'{{{args}}}'
     if is_list(retype):
-        args = render_type(unwrap_list(retype))
+        args = metavar(unwrap_list(retype))
         return f'[{args}]'
     if is_homo_tuple(retype):
-        args = render_type(unwrap_homo_tuple(retype))
+        args = metavar(unwrap_homo_tuple(retype))
         return f'({args})'
+    if is_type_union(retype):
+        return None
+    if is_type_var(retype):
+        return None
     if is_value_union(retype):
         return None
 
-    return f'{retype.__name__}'.capitalize()
+    return f'{retype.__name__}'

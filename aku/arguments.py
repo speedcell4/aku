@@ -1,10 +1,10 @@
+import inspect
 from argparse import Action, ArgumentParser, ArgumentTypeError, Namespace
 from typing import List, Optional, Tuple
-import inspect
 
 from aku.parsers import get_parsing_fn
-from aku.utils import get_annotations, is_type_union, is_homo_tuple, is_list, is_value_union, render_type, \
-    unwrap_type_union, unwrap_homo_tuple, unwrap_list, unwrap_value_union, is_type_var, unwrap_type_var
+from aku.utils import get_annotations, is_homo_tuple, is_list, is_type_union, is_type_var, is_value_union, metavar, \
+    unwrap_homo_tuple, unwrap_list, unwrap_type_union, unwrap_type_var, unwrap_value_union
 
 EXECUTED = '_AKU_EXECUTED'
 
@@ -39,7 +39,7 @@ def add_primitive(parser: ArgumentParser, arguments: ArgumentParser,
 
     arguments.add_argument(
         f'--{dest_name}', default=default, help=desc,
-        type=get_parsing_fn(annotation), metavar=render_type(annotation),
+        type=get_parsing_fn(annotation), metavar=metavar(annotation),
     )
 
     return dest_name
@@ -64,7 +64,7 @@ def add_list(parser: ArgumentParser, arguments: ArgumentParser,
     retype = unwrap_list(annotation)
     arguments.add_argument(
         f'--{dest_name}', default=default, help=desc,
-        type=get_parsing_fn(retype), metavar=render_type(annotation),
+        type=get_parsing_fn(retype), metavar=metavar(annotation),
         action=ListAppendAction,
     )
 
@@ -90,7 +90,7 @@ def add_homo_tuple(parser: ArgumentParser, arguments: ArgumentParser,
     retype = unwrap_homo_tuple(annotation)
     arguments.add_argument(
         f'--{dest_name}', default=default, help=desc,
-        type=get_parsing_fn(retype), metavar=render_type(annotation),
+        type=get_parsing_fn(retype), metavar=metavar(annotation),
         action=HomoTupleAppendAction,
     )
 

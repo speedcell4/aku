@@ -3,7 +3,7 @@ import inspect
 from typing import Any, Callable, Type
 
 from aku import utils
-from aku.utils import NoneType, render_type
+from aku.utils import NoneType, metavar
 
 _parsing_fn = {}
 
@@ -28,7 +28,7 @@ def get_parsing_fn(retype: Type) -> Callable[[str], Any]:
                     return get_parsing_fn(fn)(option_string)
                 except (ValueError, argparse.ArgumentTypeError):
                     pass
-            raise argparse.ArgumentTypeError(f'{option_string} is not a {render_type(retype)}')
+            raise argparse.ArgumentTypeError(f'{option_string} is not a {metavar(retype)}')
 
         return parsing_fn
 
