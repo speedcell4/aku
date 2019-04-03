@@ -1,26 +1,34 @@
 import inspect
 import typing
-from argparse import SUPPRESS
+from argparse import SUPPRESS, ArgumentTypeError
 from itertools import zip_longest
 from typing import Callable, Optional, TypeVar, Union
 
 NoneType = type(None)
 
 
-def is_union(retype) -> bool:
-    return getattr(retype, '__origin__', None) is typing.Union
-
-
-def unwrap_union(retype):
-    return retype.__args__
-
-
 def is_optional(retype) -> bool:
-    return is_union(retype) and NoneType in getattr(retype, '__args__', [])
+    if getattr(retype, '__origin__', None) is typing.Union:
+        if NoneType in retype.__args__ and len(retype.__args__) == 2:
+            return True  # Optional[T]
+        return False
+    return False
 
 
 def unwrap_optional(retype):
     return Union[tuple(ty for ty in retype.__args__ if ty is not NoneType)]
+
+
+def is_union(retype) -> bool:
+    if getattr(retype, '__origin__', None) is typing.Union:
+        if NoneType in retype.__args__ and len(retype.__args__) == 2:
+            return False  # Optional[T]
+        return True
+    return False
+
+
+def unwrap_union(retype):
+    return retype.__args__
 
 
 def is_list(retype) -> bool:
@@ -46,6 +54,9 @@ def is_value_union(retype) -> bool:
     if isinstance(retype, tuple):
         if all(not callable(t) for t in retype):
             return True
+        T = type(retype[0])
+        if any(not isinstance(item, T) for item in retype):
+            raise ArgumentTypeError(f'value union :: {retype} requires all of its candidates be the same type')
     return False
 
 
@@ -62,9 +73,8 @@ def unwrap_type(retype):
 
 
 def is_function_union(retype) -> bool:
-    if is_optional(retype):
-        return is_function_union(unwrap_optional(retype))
     if is_type(retype):
+        retype = unwrap_type(retype)
         if is_union(retype) or callable(retype):
             return True
     return False
@@ -111,6 +121,7 @@ def render_type(retype) -> Optional[str]:
     if is_optional(retype):
         args = render_type(unwrap_optional(retype))
         return f'{args}?'
+
     if is_union(retype):
         args = ','.join(render_type(a) for a in unwrap_union(retype))
         return f'{{{args}}}'

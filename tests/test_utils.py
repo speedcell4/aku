@@ -1,75 +1,118 @@
-import typing
-from argparse import SUPPRESS
-from typing import Optional, Type, Union
+from dataclasses import dataclass
+from string import ascii_letters
+from typing import List, Optional, Tuple, Type, TypeVar, Union
 
-from aku.utils import get_annotations, is_function_union, is_union, render_type, unwrap_function_union
+from hypothesis import assume, given, strategies as st
+
+from aku.utils import is_union, unwrap_union
 from tests.utils import Circle, Point
 
-
-def test_is_is_union():
-    assert is_union(typing.Union[str, int])
-    assert is_union(typing.Union[Type[Point], Type[Circle]])
-
-    assert not is_union(typing.List[str])
-    assert not is_union(typing.Tuple[str])
-    assert not is_union(typing.Union[str])
-    assert not is_union(typing.Union[str, str])
+PRIMITIVES = (
+    str, bool, int, float,
+)
 
 
-def foo(a: int, b: int):
-    raise NotImplementedError
+@dataclass
+class Point(object):
+    x: int
+    y: int
 
 
-def bar(a: int, b: int = 2):
-    raise NotImplementedError
+@dataclass
+class Circle(object):
+    x: int
+    y: int
+    radius: int
 
 
-def baz(a: int = 1, b: int = 2):
-    raise NotImplementedError
+@dataclass
+class Rect(object):
+    x: int
+    y: int
+    width: int
+    height: int
 
 
-def qux(a: Type[Union[Circle, Point]]):
-    raise NotImplementedError
+CLASSES = (
+    Point, Circle, Rect,
+)
 
 
-def quux(a: (1, 2, 3)):
-    raise NotImplementedError
+@st.composite
+def _primitives(draw):
+    return draw(st.sampled_from(PRIMITIVES))
 
 
-def test_get_annotations_function():
-    assert get_annotations(foo) == [('a', int, SUPPRESS, 'a'), ('b', int, SUPPRESS, 'b')]
-    assert get_annotations(bar) == [('a', int, SUPPRESS, 'a'), ('b', int, 2, 'b')]
-    assert get_annotations(baz) == [('a', int, 1, 'a'), ('b', int, 2, 'b')]
-    assert get_annotations(qux) == [('a', Type[Union[Circle, Point]], SUPPRESS, 'a')]
-    assert get_annotations(quux) == [('a', (1, 2, 3), SUPPRESS, 'a')]
+@st.composite
+def primitives(draw):
+    T = draw(_primitives())
+    return T, None
 
 
-def test_is_function_union():
-    assert is_function_union(Type[Union[Point, Circle]])
-    assert is_function_union(Type[Union[Point]])
-    assert is_function_union(Type[Point])
-    assert not is_function_union(Point)
-
-    assert is_function_union(Optional[Type[Union[Point, Circle]]])
-    assert is_function_union(Optional[Type[Union[Point]]])
-    assert is_function_union(Optional[Type[Point]])
-    assert not is_function_union(Optional[Point])
+@st.composite
+def union(draw, element=_primitives()):
+    T = draw(st.lists(element, min_size=2, max_size=len(PRIMITIVES)).map(set))
+    assume(len(T) > 1)
+    return Union[tuple(T)], tuple(T)
 
 
-def test_unwrap_function_union():
-    assert unwrap_function_union(Type[Union[Point, Circle]]) == (Circle, Point)
-    assert unwrap_function_union(Type[Union[Point]]) == (Point,)
-    assert unwrap_function_union(Type[Point]) == (Point,)
+@st.composite
+def lists(draw, element=_primitives()):
+    T = draw(element)
+    return List[T], T
 
 
-def test_render_type():
-    assert render_type(int) == 'Int'
-    assert render_type(float) == 'Float'
-    assert render_type(bool) == 'Bool'
-    assert render_type(str) == 'Str'
-
-    assert render_type(Optional[int]) == 'Int?'
-    assert render_type(Union[int, str]) == '{Int,Str}'
-    assert render_type(Optional[Union[int, str]]) == '{Int,Str}?'
+@st.composite
+def homo_tuple(draw, element=_primitives()):
+    T = draw(element)
+    return Tuple[T, ...], T
 
 
+@st.composite
+def union_type(draw):
+    T = tuple(draw(st.lists(st.sampled_from([Point, Circle, Rect]), min_size=1, max_size=3, unique=True, )))
+    return Type[Union[T]], T
+
+
+@st.composite
+def type_var(draw):
+    name = draw(st.text(min_size=1, max_size=5, alphabet=ascii_letters))
+    T = tuple(draw(st.lists(
+        st.sampled_from(CLASSES),
+        min_size=2, max_size=3, unique=True,
+    )))
+    return TypeVar(name, *T), T
+
+
+@st.composite
+def optional(draw, strategy):
+    R, T = draw(strategy)
+    return Optional[R], T
+
+
+@given(
+    true=union(),
+    false=st.one_of([
+        primitives(),
+        lists(),
+        homo_tuple(),
+        union_type(),
+        type_var(),
+
+        optional(primitives()),
+        optional(lists()),
+        optional(homo_tuple()),
+        optional(union_type()),
+        optional(type_var()),
+    ])
+)
+def test_is_union(true, false):
+    assert is_union(true[0])
+    assert not is_union(false[0])
+
+
+@given(
+    true=union(),
+)
+def test_unwrap_union(true):
+    assert unwrap_union(true[0]) == true[1]
