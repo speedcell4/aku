@@ -32,12 +32,12 @@ def register_argument_fn(func):
 
 
 @register_argument_fn
-def add_primitive(parser: ArgumentParser, arguments: ArgumentParser,
+def add_primitive(parser: ArgumentParser, group: ArgumentParser,
                   annotation: Tuple, prefix: str, **kwargs):
     name, annotation, default, desc = annotation
     dest_name = get_dest_name(name, prefix)
 
-    arguments.add_argument(
+    group.add_argument(
         f'--{dest_name}', default=default, help=desc,
         type=get_parsing_fn(annotation), metavar=metavar(annotation),
     )
@@ -54,7 +54,7 @@ class ListAppendAction(Action):
 
 
 @register_argument_fn
-def add_list(parser: ArgumentParser, arguments: ArgumentParser,
+def add_list(parser: ArgumentParser, group: ArgumentParser,
              annotation: Tuple, prefix: str, **kwargs):
     name, annotation, default, desc = annotation
     dest_name = get_dest_name(name, prefix)
@@ -62,7 +62,7 @@ def add_list(parser: ArgumentParser, arguments: ArgumentParser,
         raise TypeError
 
     retype = unwrap_list(annotation)
-    arguments.add_argument(
+    group.add_argument(
         f'--{dest_name}', default=default, help=desc,
         type=get_parsing_fn(retype), metavar=metavar(annotation),
         action=ListAppendAction,
@@ -80,7 +80,7 @@ class HomoTupleAppendAction(Action):
 
 
 @register_argument_fn
-def add_homo_tuple(parser: ArgumentParser, arguments: ArgumentParser,
+def add_homo_tuple(parser: ArgumentParser, group: ArgumentParser,
                    annotation: Tuple, prefix: str, **kwargs):
     name, annotation, default, desc = annotation
     dest_name = get_dest_name(name, prefix)
@@ -88,7 +88,7 @@ def add_homo_tuple(parser: ArgumentParser, arguments: ArgumentParser,
         raise TypeError
 
     retype = unwrap_homo_tuple(annotation)
-    arguments.add_argument(
+    group.add_argument(
         f'--{dest_name}', default=default, help=desc,
         type=get_parsing_fn(retype), metavar=metavar(annotation),
         action=HomoTupleAppendAction,
@@ -98,7 +98,7 @@ def add_homo_tuple(parser: ArgumentParser, arguments: ArgumentParser,
 
 
 @register_argument_fn
-def add_value_union(parser: ArgumentParser, arguments: ArgumentParser,
+def add_value_union(parser: ArgumentParser, group: ArgumentParser,
                     annotation: Tuple, prefix: str, **kwargs):
     name, annotation, default, desc = annotation
     dest_name = get_dest_name(name, prefix)
@@ -106,7 +106,7 @@ def add_value_union(parser: ArgumentParser, arguments: ArgumentParser,
         raise TypeError
 
     retype = unwrap_value_union(annotation)
-    arguments.add_argument(
+    group.add_argument(
         f'--{dest_name}', default=default, help=desc,
         type=get_parsing_fn(retype), choices=annotation,
     )
@@ -115,39 +115,33 @@ def add_value_union(parser: ArgumentParser, arguments: ArgumentParser,
 
 
 @register_argument_fn
-def add_function_union(parser: ArgumentParser, arguments: ArgumentParser,
-                       annotation: Tuple, prefix: str, **kwargs):
+def add_type_union(parser: ArgumentParser, group: ArgumentParser,
+                   annotation: Tuple, prefix: str, **kwargs):
     name, annotation, default, desc = annotation
     option_name = get_dest_name(f'{name}', prefix)
     dest_name = get_dest_name(f'{name}_choose', prefix)
 
-    if is_type_union(annotation):
-        function_map = {
-            f.__self__.__name__ if inspect.ismethod(f) else f.__name__: f
-            for f in unwrap_type_union(annotation)
-        }
-    elif is_type_var(annotation):
-        prefix = append_prefix(prefix, annotation.__name__)
-        function_map = {
-            f.__self__.__name__ if inspect.ismethod(f) else f.__name__: f
-            for f in unwrap_type_var(annotation)
-        }
-    else:
+    if not is_type_union(annotation):
         raise TypeError
 
+    group = parser.add_argument_group(name)
+    function_map = {
+        f.__self__.__name__ if inspect.ismethod(f) else f.__name__: f
+        for f in unwrap_type_union(annotation)
+    }
+
     class ChooseFunctionAction(Action):
-        def __init__(self, *args, prefix, arguments, **kwargs):
+        def __init__(self, *args, **kwargs):
             super(ChooseFunctionAction, self).__init__(*args, **kwargs)
-            self.prefix = prefix
-            self.arguments = arguments
 
         def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string) -> None:
             if not getattr(self, EXECUTED, False):
                 setattr(self, EXECUTED, True)
                 setattr(namespace, self.dest, values)
                 names = add_function(
-                    parser=parser, arguments=self.arguments,
-                    func=function_map[values], prefix=prefix, **kwargs,
+                    parser=parser, group=group,
+                    func=function_map[values],
+                    prefix=prefix, **kwargs,
                 )
                 parser.set_defaults(**{
                     option_name: function_map[values],
@@ -156,17 +150,59 @@ def add_function_union(parser: ArgumentParser, arguments: ArgumentParser,
                     kwargs.get('slots').append((option_name, names))
                 parser.parse_known_args()
 
-    arguments = parser.add_argument_group(name)
-    arguments.add_argument(
+    group.add_argument(
         f'--{option_name}', dest=dest_name, default=default, help=desc,
-        choices=list(function_map.keys()), action=ChooseFunctionAction,
-        type=get_parsing_fn(str), prefix=name, arguments=arguments,
+        type=get_parsing_fn(str), choices=list(function_map.keys()), action=ChooseFunctionAction,
     )
 
     return option_name
 
 
-def add_function(parser: ArgumentParser, arguments: ArgumentParser,
+@register_argument_fn
+def add_type_var(parser: ArgumentParser, group: ArgumentParser,
+                 annotation: Tuple, prefix: str, **kwargs):
+    name, annotation, default, desc = annotation
+    option_name = get_dest_name(f'{name}', prefix)
+    dest_name = get_dest_name(f'{name}_choose', prefix)
+
+    if not is_type_var(annotation):
+        raise TypeError
+
+    group = parser.add_argument_group(name)
+    function_map = {
+        f.__self__.__name__ if inspect.ismethod(f) else f.__name__: f
+        for f in unwrap_type_var(annotation)
+    }
+
+    class ChooseFunctionAction(Action):
+        def __init__(self, *args, **kwargs):
+            super(ChooseFunctionAction, self).__init__(*args, **kwargs)
+
+        def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string) -> None:
+            if not getattr(self, EXECUTED, False):
+                setattr(self, EXECUTED, True)
+                setattr(namespace, self.dest, values)
+                names = add_function(
+                    parser=parser, group=group,
+                    func=function_map[values],
+                    prefix=append_prefix(prefix, annotation.__name__), **kwargs,
+                )
+                parser.set_defaults(**{
+                    option_name: function_map[values],
+                })
+                if option_name != names:
+                    kwargs.get('slots').append((option_name, names))
+                parser.parse_known_args()
+
+    group.add_argument(
+        f'--{option_name}', dest=dest_name, default=default, help=desc,
+        type=get_parsing_fn(str), choices=list(function_map.keys()), action=ChooseFunctionAction,
+    )
+
+    return option_name
+
+
+def add_function(parser: ArgumentParser, group: ArgumentParser,
                  func, prefix: str = None, **kwargs) -> List:
     names = []
     for annotation in get_annotations(func):
@@ -174,7 +210,7 @@ def add_function(parser: ArgumentParser, arguments: ArgumentParser,
         for argument_fn in _argument_fn[::-1]:
             try:
                 name = argument_fn(
-                    parser=parser, arguments=arguments,
+                    parser=parser, arguments=group,
                     annotation=annotation, prefix=prefix, **kwargs,
                 )
                 names.append((annotation[0], name))
