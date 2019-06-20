@@ -18,7 +18,7 @@ python3.6 -m pip install aku --upgrade
 # file test_single_function.py
 import aku
 
-app = aku.App()
+app = aku.Aku()
 
 
 @app.register
@@ -31,7 +31,7 @@ app.run()
 
 then `aku` will automatically add argument option according to your function signature.
 
-```bash
+```shell
 ~ python tests/test_single_function.py --help    
 usage: aku [-h] --a A [--b B]
 
@@ -66,7 +66,7 @@ app.run()
 
 your argument parser interface will looks like,
 
-```bash
+```shell
 ~ python tests/test_multi_functions.py --help    
 usage: aku [-h] {add,say_hello} ...
 
@@ -86,13 +86,3 @@ optional arguments:
 ~ python tests/test_multi_functions.py say_hello --name aku
 hello aku
 ```
-
-## TODOs
-
-- [ ] docstring parsing
-- [ ] `args` and `kwargs` analyzing
-- [ ] more friendly `FormatterClass`
-- [ ] dependency relationship among parameters
-- [ ] unit tests and Travis CI
-- [ ] register type converter function
-- [ ] builder pattern, e.g. @then @final \[@when]
