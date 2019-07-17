@@ -38,6 +38,10 @@ def is_type_var(ty):
     return isinstance(ty, TypeVar)
 
 
+def is_callable(ty):
+    return getattr(ty, '_name', None) == 'Callable'
+
+
 def is_value_union(ty):
     if isinstance(ty, tuple):
         if not any(callable(t) for t in ty):

@@ -153,6 +153,8 @@ def add_function(parser: ArgumentParser, prefix: Optional[str], name: Optional[s
             add_op = add_type_union
         elif ty.is_type_var(aa):
             add_op = add_type_var
+        elif ty.is_callable(aa):
+            add_op, aa = add_function, dd
         else:
             add_op = add_primitive
 

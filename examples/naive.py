@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeVar, Callable
 
 import aku
 
@@ -11,13 +11,19 @@ def add(x: int = 1, y: int = 2):
 
 
 @app.register
-def sub(x: int = 3, y: int = 4):
-    return x - y
+def sub(a: int = 3, b: int = 4):
+    return a - b
 
 
 @app.register
 def mul(encoder: TypeVar('enc', add, sub) = sub):
     print(f'op() => {encoder()}')
+
+
+@app.register
+def nice(a: Callable = add, b: Callable = sub):
+    ret = a() + b()
+    print(f'ret => {ret}')
 
 
 if __name__ == '__main__':

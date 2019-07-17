@@ -56,3 +56,6 @@ class Aku(object):
                 del self.raw_args[obj_dest]
 
         return fn(**self.args)
+
+
+App = Aku
