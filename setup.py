@@ -7,10 +7,9 @@ setup(
     name='aku',
     description='Annotation-driven ArgumentParser Generator',
     long_description=long_description,
-    version=open('VERSION', mode='r').read(),
+    version='0.2.1',
     packages=find_packages(),
     classifiers=[
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3 :: Only',
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: MIT License',
@@ -22,5 +21,5 @@ setup(
     license='MIT',
     author='Izen',
     author_email='speedcell4@gmail.com',
-    python_requires='>=3.7',
+    python_requires='>=3.5',
 )
