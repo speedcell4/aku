@@ -37,7 +37,7 @@ class LstmEncoder(nn.Module):
             batch_first=True, bidirectional=True,
         )
 
-        self.output_dim = hidden_dim
+        self.encoding_dim = hidden_dim * (2 if self.rnn.bidirectional else 1)
 
     def forward(self, embedding: PackedSequence) -> Tensor:
         _, (encoding, _) = self.rnn(embedding)
@@ -58,12 +58,10 @@ class ConvEncoder(nn.Module):
         ])
         self.fc = nn.Sequential(
             nn.Dropout(dropout),
-            nn.Linear(input_dim * len(kernel_sizes), input_dim * len(kernel_sizes)),
-            nn.ReLU(),
-            nn.Linear(input_dim * len(kernel_sizes), hidden_dim),
+            nn.Linear(input_dim * len(kernel_sizes), hidden_dim * 2),
         )
 
-        self.output_dim = hidden_dim
+        self.encoding_dim = self.fc[-1].out_features
 
     def forward(self, embedding: Tensor) -> Tensor:
         encoding = torch.cat([
@@ -84,18 +82,18 @@ class Classifier(nn.Sequential):
 
 class TextClassification(nn.Module):
     def __init__(self,
-                 embedding: Type[WordEmbedding],
-                 encoder: Union[Type[LstmEncoder], Type[ConvEncoder]] = Type[LstmEncoder],
-                 decoder: Type[Classifier] = Type[Classifier],
+                 Embedding: Type[WordEmbedding],
+                 Encoder: Union[Type[LstmEncoder], Type[ConvEncoder]] = Type[LstmEncoder],
+                 Decoder: Type[Classifier] = Type[Classifier],
                  reduction: Literal['sum', 'mean'] = 'mean',
                  *,
                  word_vocab: Vocab, target_vocab: Vocab,
                  ):
         super(TextClassification, self).__init__()
 
-        self.embedding = embedding(word_vocab=word_vocab)
-        self.encoder = encoder(input_dim=self.embedding.embedding_dim)
-        self.decoder = decoder(input_dim=self.encoder.output_dim, target_vocab=target_vocab)
+        self.embedding = Embedding(word_vocab=word_vocab)
+        self.encoder = Encoder(input_dim=self.embedding.embedding_dim)
+        self.decoder = Decoder(input_dim=self.encoder.encoding_dim, target_vocab=target_vocab)
 
         self.criterion = nn.CrossEntropyLoss(
             ignore_index=target_vocab.stoi.get('<pad>', -100),
@@ -105,10 +103,9 @@ class TextClassification(nn.Module):
     def forward(self, batch: Batch) -> Tensor:
         if isinstance(self.encoder, LstmEncoder):
             embedding = self.embedding(batch.word)
-            encoding = self.encoder(embedding)
         else:
             embedding = self.embedding(batch.word[0])
-            encoding = self.encoder(embedding)
+        encoding = self.encoder(embedding)
         return self.decoder(encoding)
 
     def fit(self, batch: Batch) -> Tensor:
@@ -118,3 +115,9 @@ class TextClassification(nn.Module):
     def inference(self, batch: Batch) -> float:
         prediction = self(batch).argmax(dim=-1)
         return (prediction == batch.target).float().mean().item()
+
+
+def train_text_classification(
+        model: Type[TextClassification],
+):
+    raise NotImplementedError
