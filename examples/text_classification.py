@@ -1,6 +1,6 @@
 import torch
 from torch import Tensor
-from torch import nn
+from torch import nn, optim
 from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
 from torchtext.data import Batch
 from torchtext.vocab import Vocab
@@ -117,7 +117,37 @@ class TextClassification(nn.Module):
         return (prediction == batch.target).float().mean().item()
 
 
+def sgd(lr: float = 1e-3, momentum: float = 0.0,
+        weight_decay: float = 0.0, *, model: nn.Module):
+    return optim.SGD(
+        model.parameters(), lr=lr,
+        momentum=momentum, weight_decay=weight_decay,
+    )
+
+
+def adam(lr: float = 1e-3, beta1: float = 0.9, beta2: float = 0.999,
+         weight_decay: float = 0.0, *, model: nn.Module):
+    return optim.Adam(
+        model.parameters(), lr=lr,
+        betas=(beta1, beta2), weight_decay=weight_decay,
+    )
+
+
+def exponential(gamma: float = 0.98, *, optimizer: optim.Optimizer):
+    return optim.lr_scheduler.ExponentialLR(
+        optimizer=optimizer, gamma=gamma,
+    )
+
+
+def half_life(half_life_epoch: int, *, optimizer: optim.Optimizer):
+    return optim.lr_scheduler.ExponentialLR(
+        optimizer=optimizer, gamma=0.5 ** (1 / half_life_epoch),
+    )
+
+
 def train_text_classification(
-        model: Type[TextClassification],
+        Model: Type[TextClassification],
+        Optimizer: Union[Type[sgd], Type[adam]] = Type[adam],
+        Scheduler: Union[Type[exponential], Type[half_life]] = Type[half_life],
 ):
     raise NotImplementedError

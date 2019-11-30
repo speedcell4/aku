@@ -1,6 +1,11 @@
 import sys
-from typing import List, Tuple, Set, FrozenSet
-from typing import Optional, Type, Union
+from typing import FrozenSet
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
+from typing import Type
+from typing import Union
 
 if sys.version_info >= (3, 8):
     from typing import Literal
