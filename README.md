@@ -19,17 +19,17 @@ python -m pip install aku --upgrade
 
 ```python
 # tests/test_single_function.py
-import aku
+from aku import Aku
 
-app = aku.Aku()
+aku = Aku()
 
 
-@app.register
+@aku.register
 def add(a: int, b: int = 2):
     print(f'{a} + {b} => {a + b}')
 
 
-app.run()
+aku.run()
 ```
 
 `aku` will automatically add argument options according to your function signature.
@@ -49,22 +49,22 @@ Registering more than one function will make `aku` add them to sub-parser respec
 
 ```python
 # file test_multi_functions.py
-import aku
+from aku import Aku
 
-app = aku.Aku()
+aku = Aku()
 
 
-@app.register
+@aku.register
 def add(a: int, b: int = 2):
     print(f'{a} + {b} => {a + b}')
 
 
-@app.register
+@aku.register
 def say_hello(name: str):
     print(f'hello {name}')
 
 
-app.run()
+aku.run()
 ```
 
 Similarly, your command line interface will look like,
