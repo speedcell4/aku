@@ -9,7 +9,11 @@ from aku import Literal, Type, Union, Tuple
 
 
 class WordEmbedding(nn.Embedding):
-    def __init__(self, freeze: bool = False, *, word_vocab: Vocab) -> None:
+    def __init__(self,
+                 freeze: bool = False,
+                 *,
+                 word_vocab: Vocab,
+                 ):
         num_embeddings, embedding_dim = word_vocab.vectors.size()
         super(WordEmbedding, self).__init__(
             num_embeddings=num_embeddings, embedding_dim=embedding_dim,
@@ -27,8 +31,14 @@ class WordEmbedding(nn.Embedding):
 
 
 class LstmEncoder(nn.Module):
-    def __init__(self, hidden_dim: int = 300, bias: bool = True,
-                 num_layers: int = 2, dropout: float = 0.2, *, input_dim: int):
+    def __init__(self,
+                 hidden_dim: int = 300,
+                 bias: bool = True,
+                 num_layers: int = 2,
+                 dropout: float = 0.2,
+                 *,
+                 input_dim: int,
+                 ):
         super(LstmEncoder, self).__init__()
 
         self.rnn = nn.LSTM(
@@ -45,8 +55,14 @@ class LstmEncoder(nn.Module):
 
 
 class ConvEncoder(nn.Module):
-    def __init__(self, hidden_dim: int = 300, bias: bool = True,
-                 kernel_sizes: Tuple[int, ...] = (3, 5, 7), dropout: float = 0.2, *, input_dim: int):
+    def __init__(self,
+                 hidden_dim: int = 300,
+                 bias: bool = True,
+                 kernel_sizes: Tuple[int, ...] = (3, 5, 7),
+                 dropout: float = 0.2,
+                 *,
+                 input_dim: int,
+                 ):
         super(ConvEncoder, self).__init__()
 
         self.conv_layers = nn.ModuleList([
@@ -72,7 +88,12 @@ class ConvEncoder(nn.Module):
 
 
 class Classifier(nn.Sequential):
-    def __init__(self, input_dim: int, bias: bool = True, *, target_vocab: Vocab):
+    def __init__(self,
+                 input_dim: int,
+                 bias: bool = True,
+                 *,
+                 target_vocab: Vocab,
+                 ):
         super(Classifier, self).__init__(
             nn.Linear(input_dim, input_dim, bias=bias),
             nn.ReLU(),
@@ -117,29 +138,45 @@ class TextClassification(nn.Module):
         return (prediction == batch.target).float().mean().item()
 
 
-def sgd(lr: float = 1e-3, momentum: float = 0.0,
-        weight_decay: float = 0.0, *, model: nn.Module):
+def sgd(lr: float = 1e-3,
+        momentum: float = 0.0,
+        weight_decay: float = 0.0,
+        *,
+        model: nn.Module,
+        ):
     return optim.SGD(
         model.parameters(), lr=lr,
         momentum=momentum, weight_decay=weight_decay,
     )
 
 
-def adam(lr: float = 1e-3, beta1: float = 0.9, beta2: float = 0.999,
-         weight_decay: float = 0.0, *, model: nn.Module):
+def adam(lr: float = 1e-3,
+         beta1: float = 0.9,
+         beta2: float = 0.999,
+         weight_decay:
+         float = 0.0,
+         *,
+         model: nn.Module,
+         ):
     return optim.Adam(
         model.parameters(), lr=lr,
         betas=(beta1, beta2), weight_decay=weight_decay,
     )
 
 
-def exponential(gamma: float = 0.98, *, optimizer: optim.Optimizer):
+def exponential(gamma: float = 0.98,
+                *,
+                optimizer: optim.Optimizer,
+                ):
     return optim.lr_scheduler.ExponentialLR(
         optimizer=optimizer, gamma=gamma,
     )
 
 
-def half_life(half_life_epoch: int, *, optimizer: optim.Optimizer):
+def half_life(half_life_epoch: int,
+              *,
+              optimizer: optim.Optimizer,
+              ):
     return optim.lr_scheduler.ExponentialLR(
         optimizer=optimizer, gamma=0.5 ** (1 / half_life_epoch),
     )
@@ -148,6 +185,6 @@ def half_life(half_life_epoch: int, *, optimizer: optim.Optimizer):
 def train_text_classification(
         Model: Type[TextClassification],
         Optimizer: Union[Type[sgd], Type[adam]] = Type[adam],
-        Scheduler: Union[Type[exponential], Type[half_life]] = Type[half_life],
+        Scheduler: Union[Type[exponential], Type[half_life]] = Type[half_life]
 ):
     raise NotImplementedError
