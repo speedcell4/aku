@@ -36,6 +36,7 @@ class LstmEncoder(nn.Module):
                  bias: bool = True,
                  num_layers: int = 2,
                  dropout: float = 0.2,
+                 bidirectional: bool = True,
                  *,
                  input_dim: int,
                  ):
@@ -44,10 +45,10 @@ class LstmEncoder(nn.Module):
         self.rnn = nn.LSTM(
             input_size=input_dim, hidden_size=hidden_dim, bias=bias,
             num_layers=num_layers, dropout=dropout,
-            batch_first=True, bidirectional=True,
+            batch_first=True, bidirectional=bidirectional,
         )
 
-        self.encoding_dim = hidden_dim * (2 if self.rnn.bidirectional else 1)
+        self.encoding_dim = self.rnn.hidden_dim * (2 if self.rnn.bidirectional else 1)
 
     def forward(self, embedding: PackedSequence) -> Tensor:
         _, (encoding, _) = self.rnn(embedding)
@@ -173,7 +174,7 @@ def exponential(gamma: float = 0.98,
     )
 
 
-def half_life(half_life_epoch: int,
+def half_life(half_life_epoch: int = 50,
               *,
               optimizer: optim.Optimizer,
               ):
