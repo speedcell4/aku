@@ -1,9 +1,13 @@
-# aku
+# Aku
 
 [![PyPI Version](https://badge.fury.io/py/aku.svg)](https://pypi.org/project/aku/)
 [![Actions Status](https://github.com/speedcell4/aku/workflows/unit-tests/badge.svg)](https://github.com/speedcell4/aku/actions)
 
 An Annotation-driven ArgumentParser Generator
+
+## Requirements
+
+Python 3.5 or higher
 
 ## Install
 
@@ -11,7 +15,7 @@ An Annotation-driven ArgumentParser Generator
 python -m pip install aku --upgrade
 ```
 
-## Usage
+## Quick Start
 
 ```python
 # tests/test_single_function.py
@@ -30,7 +34,7 @@ app.run()
 
 `aku` will automatically add argument options according to your function signature.
 
-```bash
+```
 ~ python tests/test_single_function.py --help    
 usage: aku [-h] --a A [--b B]
 
@@ -63,9 +67,9 @@ def say_hello(name: str):
 app.run()
 ```
 
-Similarly, your argument parser interface looks like,
+Similarly, your command line interface will look like,
 
-```bash
+```
 ~ python tests/test_multi_functions.py --help    
 usage: aku [-h] {add,say_hello} ...
 
