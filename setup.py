@@ -24,6 +24,8 @@ setup(
         'dev': [
             'pytest',
             'hypothesis',
+            'torchglyph',
+            'einops',
         ],
     }
 )
