@@ -1,13 +1,12 @@
 # Aku
 
-[![PyPI Version](https://badge.fury.io/py/aku.svg)](https://pypi.org/project/aku/)
 [![Actions Status](https://github.com/speedcell4/aku/workflows/unit-tests/badge.svg)](https://github.com/speedcell4/aku/actions)
 
 An Annotation-driven ArgumentParser Generator
 
 ## Requirements
 
-Python 3.5 or higher
+Python 3.7 or higher
 
 ## Install
 
