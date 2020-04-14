@@ -1,10 +1,11 @@
 from abc import ABCMeta, abstractmethod
-from typing import List, Type, Union, Tuple
+from typing import Type
+from typing import Union, List, Tuple
 
 import torch
 from einops import rearrange
 from torch import Tensor
-from torch import nn
+from torch import nn, optim
 from torch.nn.utils.rnn import PackedSequence
 from torch.nn.utils.rnn import pad_packed_sequence
 from torchglyph.vocab import Vocab
@@ -116,3 +117,23 @@ class TextClassifier(nn.Module):
     def inference(self, word: PackedSequence) -> List[int]:
         projection = self(word)
         return projection.detach().cpu().argmax(dim=-1).tolist()
+
+
+class SGD(optim.SGD):
+    def __init__(self, lr: float = 1e-3, momentum: float = 0, dampening: float = 0,
+                 weight_decay: float = 0, nesterov: bool = False, *, module: nn.Module) -> None:
+        super(SGD, self).__init__(
+            params=module.parameters(),
+            lr=lr, momentum=momentum, dampening=dampening,
+            weight_decay=weight_decay, nesterov=nesterov,
+        )
+
+
+class Adam(optim.Adam):
+    def __init__(self, lr: float = 1e-3, betas: Tuple[float, float] = (0.9, 0.999), eps: float = 1e-8,
+                 weight_decay: float = 0, amsgrad: bool = False, *, module: nn.Module) -> None:
+        super(Adam, self).__init__(
+            params=module.parameters(),
+            lr=lr, betas=betas, eps=eps,
+            weight_decay=weight_decay, amsgrad=amsgrad,
+        )
