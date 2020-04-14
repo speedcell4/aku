@@ -13,6 +13,12 @@ from torchglyph.vocab import Vocab
 from aku import Literal
 
 
+class Corpus(object):
+    @classmethod
+    def new(cls, batch_size: int) -> None:
+        raise NotImplementedError
+
+
 class WordEmbedding(nn.Embedding):
     def __init__(self, *, word_vocab: Vocab) -> None:
         super(WordEmbedding, self).__init__(
@@ -137,3 +143,23 @@ class Adam(optim.Adam):
             lr=lr, betas=betas, eps=eps,
             weight_decay=weight_decay, amsgrad=amsgrad,
         )
+
+
+def train_classifier(
+        num_epochs: int = 100,
+        Data: Type[Corpus.new] = Corpus.new,
+        Cls: Type[TextClassifier] = TextClassifier,
+        Opt: Type[Union[SGD, Adam]] = Adam,
+):
+    train, dev, test = Data()
+    classifier = Cls(word_vocab=..., target_vocab=...)
+    optimizer = Opt(module=classifier)
+
+    for epoch in range(1, num_epochs + 1):
+        classifier.train()
+        for batch in train:
+            loss = classifier(batch)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
