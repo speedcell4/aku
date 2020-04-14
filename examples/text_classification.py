@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import List, Type, Union
+from typing import List, Type, Union, Tuple
 
 import torch
 from einops import rearrange
@@ -8,6 +8,8 @@ from torch import nn
 from torch.nn.utils.rnn import PackedSequence
 from torch.nn.utils.rnn import pad_packed_sequence
 from torchglyph.vocab import Vocab
+
+from aku import Literal
 
 
 class WordEmbedding(nn.Embedding):
@@ -36,7 +38,7 @@ class Encoder(nn.Module, metaclass=ABCMeta):
 
 
 class LstmEncoder(Encoder):
-    def __init__(self, hidden_dim: int, num_layers: int, *, embedding_layer: WordEmbedding) -> None:
+    def __init__(self, hidden_dim: int = 300, num_layers: int = 1, *, embedding_layer: WordEmbedding) -> None:
         super(LstmEncoder, self).__init__(embedding_layer=embedding_layer)
         self.rnn = nn.LSTM(
             input_size=embedding_layer.embedding_dim,
@@ -52,7 +54,8 @@ class LstmEncoder(Encoder):
 
 
 class ConvEncoder(Encoder):
-    def __init__(self, kernel_sizes: List[int], hidden_dim: int, *, embedding_layer: WordEmbedding):
+    def __init__(self, kernel_sizes: Tuple[int, ...] = (3, 5, 7), hidden_dim: int = 200, *,
+                 embedding_layer: WordEmbedding) -> None:
         super(ConvEncoder, self).__init__(embedding_layer=embedding_layer)
         self.convs = nn.ModuleList([
             nn.Sequential(
@@ -88,7 +91,7 @@ class TextClassifier(nn.Module):
                  Emb: Type[WordEmbedding] = WordEmbedding,
                  Enc: Type[Union[LstmEncoder, ConvEncoder]] = LstmEncoder,
                  Proj: Type[Projection] = Projection,
-                 reduction: str = 'mean', *,
+                 reduction: Literal['sum', 'mean'] = 'mean', *,
                  word_vocab: Vocab, target_vocab: Vocab) -> None:
         super(TextClassifier, self).__init__()
 
@@ -106,15 +109,10 @@ class TextClassifier(nn.Module):
         encoding = self.encoding_layer(embedding)
         return self.projection_layer(encoding)
 
-    def fit(self, word: PackedSequence, target: PackedSequence) -> Tensor:
+    def fit(self, word: PackedSequence, target: Tensor) -> Tensor:
         projection = self(word)
-        return self.criterion(projection.data, target.data)
+        return self.criterion(projection, target)
 
-    def inference(self, word: PackedSequence) -> List[List[int]]:
-        predictions, lengths = pad_packed_sequence(self(word), batch_first=True)
-        predictions = predictions.detach().cpu().tolist()
-        lengths = lengths.detach().cpu().tolist()
-        return [
-            predictions[i][:l]
-            for i, l in enumerate(lengths)
-        ]
+    def inference(self, word: PackedSequence) -> List[int]:
+        projection = self(word)
+        return projection.detach().cpu().argmax(dim=-1).tolist()
