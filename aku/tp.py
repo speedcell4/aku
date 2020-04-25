@@ -26,7 +26,7 @@ class Tp(object, metaclass=ABCMeta):
             tp = type(args[0])
 
             assert all(isinstance(a, tp) for a in args), \
-                f'all parameters should have the same type {tp.__name__}'
+                f'all arguments should have the same type {tp.__name__}'
             return PrimitiveTp(tp, *set(args))
 
         if origin is list and len(args) == 1:
@@ -44,7 +44,7 @@ class Tp(object, metaclass=ABCMeta):
         if origin is frozenset:
             return FrozenSetTp(origin, cls[args[0]])
 
-        raise NotImplementedError(f'unsupported annotation {tp}')
+        raise NotImplementedError(f'unsupported {cls.__name__} {tp}')
 
     @property
     @abstractmethod
@@ -57,15 +57,17 @@ class Tp(object, metaclass=ABCMeta):
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
         return argument_parser.add_argument(
-            f'--{name}', required=True, help=f'{name}',
-            type=self.parse_fn, metavar=self.metavar, default=default,
+            f'--{name}', help=f'{name}',
+            type=self.parse_fn, metavar=self.metavar, default=repr(default),
         )
 
 
 class PrimitiveTp(Tp):
     @property
     def metavar(self) -> str:
-        return f'{self.origin.__name__.lower()}'
+        if len(self.args) == 0:
+            return f'{self.origin.__name__.lower()}'
+        return f"{{{', '.join([f'{repr(a)}' for a in self.args])}}}"
 
     def parse_fn(self, option_string: str) -> Any:
         fn = get_parse_fn(self.origin)
@@ -73,8 +75,8 @@ class PrimitiveTp(Tp):
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
         return argument_parser.add_argument(
-            f'--{name}', required=True, help=f'{name}',
-            type=self.parse_fn, metavar=self.metavar, default=default,
+            f'--{name}', help=f'{name}',
+            type=self.parse_fn, metavar=self.metavar, default=repr(default),
             choices=self.args if len(self.args) > 0 else None,
         )
 
@@ -87,9 +89,9 @@ class ListTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         option_string = option_string.strip()
         if not option_string.startswith('[') or not option_string.endswith(']'):
-            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
+            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string)
+        option_strings = re.split(COMMA, option_string[1:-1])
         return self.origin(self.args[0].parse_fn(s) for s in option_strings)
 
 
@@ -101,9 +103,9 @@ class HomoTupleTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         option_string = option_string.strip()
         if not option_string.startswith('(') or not option_string.endswith(')'):
-            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
+            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string)
+        option_strings = re.split(COMMA, option_string[1:-1])
         return self.origin(self.args[0].parse_fn(s) for s in option_strings)
 
 
@@ -115,12 +117,12 @@ class HeteroTupleTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         option_string = option_string.strip()
         if not option_string.startswith('(') or not option_string.endswith(')'):
-            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
+            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string)
+        option_strings = re.split(COMMA, option_string[1:-1])
         assert len(option_strings) == len(self.args), \
-            f'the number of parameters is not correct, ' \
-            f'got {len(option_strings)} instead of {len(self.args)}'
+            f'the number of arguments is not correct, ' \
+            f'got {len(option_strings)} but excepted {len(self.args)}'
 
         return self.origin(a.parse_fn(s) for s, a in zip(option_strings, self.args))
 
@@ -133,9 +135,9 @@ class SetTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         option_string = option_string.strip()
         if not option_string.startswith('{') or not option_string.endswith('}'):
-            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
+            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string)
+        option_strings = re.split(COMMA, option_string[1:-1])
         return self.origin(self.args[0].parse_fn(s) for s in option_strings)
 
 
@@ -147,7 +149,7 @@ class FrozenSetTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         option_string = option_string.strip()
         if not option_string.startswith('{') or not option_string.endswith('}'):
-            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
+            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string)
+        option_strings = re.split(COMMA, option_string[1:-1])
         return self.origin(self.args[0].parse_fn(s) for s in option_strings)
