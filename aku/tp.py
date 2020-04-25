@@ -1,6 +1,6 @@
 import re
 from abc import ABCMeta, abstractmethod
-from argparse import ArgumentParser
+from argparse import ArgumentParser, SUPPRESS
 from typing import get_args, get_origin, Any, Union, Literal
 
 from aku.parse_fn import get_parse_fn
@@ -58,7 +58,8 @@ class Tp(object, metaclass=ABCMeta):
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
         return argument_parser.add_argument(
             f'--{name}', help=f'{name}',
-            type=self.parse_fn, metavar=self.metavar, default=repr(default),
+            type=self.parse_fn, metavar=self.metavar, required=default == SUPPRESS,
+            default=repr(default) if default != SUPPRESS else SUPPRESS,
         )
 
 
@@ -70,14 +71,14 @@ class PrimitiveTp(Tp):
         return f"{{{', '.join([f'{repr(a)}' for a in self.args])}}}"
 
     def parse_fn(self, option_string: str) -> Any:
-        fn = get_parse_fn(self.origin)
-        return fn(option_string.strip())
+        return get_parse_fn(self.origin)(option_string.strip())
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
         return argument_parser.add_argument(
             f'--{name}', help=f'{name}',
-            type=self.parse_fn, metavar=self.metavar, default=repr(default),
             choices=self.args if len(self.args) > 0 else None,
+            type=self.parse_fn, metavar=self.metavar, required=default == SUPPRESS,
+            default=repr(default) if default != SUPPRESS else SUPPRESS,
         )
 
 
