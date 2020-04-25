@@ -19,7 +19,7 @@ class Tp(object, metaclass=ABCMeta):
         origin = get_origin(tp)
 
         if origin is None and args == ():
-            return PrimitiveTp(origin)
+            return PrimitiveTp(tp)
         if origin is list and len(args) == 1:
             return ListTp(origin, cls[args[0]])
         if origin is tuple:
