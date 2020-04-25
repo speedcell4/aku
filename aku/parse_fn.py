@@ -5,8 +5,6 @@ registry = {}
 
 def register_parse_fn(tp):
     ret = inspect.getfullargspec(tp).annotations['return']
-
-    global registry
     assert ret not in registry
 
     registry[ret] = tp
@@ -24,4 +22,4 @@ def parse_bool(option_string: str) -> bool:
         return True
     if option_string in ('0', 'n', 'no', 'f', 'false'):
         return False
-    raise ValueError(f'{option_string} is not a boolean value')
+    raise ValueError(f'{option_string} is not a {bool.__name__} value')
