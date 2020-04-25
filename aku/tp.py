@@ -19,14 +19,14 @@ class Tp(object, metaclass=ABCMeta):
         origin = get_origin(tp)
 
         if origin is None and args == ():
-            return PrimitiveTp(origin, *args)
+            return PrimitiveTp(origin)
         if origin is list and len(args) == 1:
-            return ListTp(origin, *args)
+            return ListTp(origin, cls[args[0]])
         if origin is tuple:
             if len(args) == 2 and args[1] is ...:
-                return HomoTupleTp(origin, *args)
+                return HomoTupleTp(origin, cls[args[0]])
             else:
-                return HeteroTupleTp(origin, *args)
+                return HeteroTupleTp(origin, *[cls[a] for a in args])
 
         raise NotImplementedError(f'unsupported annotation {tp}')
 
@@ -39,9 +39,11 @@ class Tp(object, metaclass=ABCMeta):
     def parse_fn(self, option_string: str) -> Any:
         raise NotImplementedError
 
-    @abstractmethod
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
-        raise NotImplementedError
+        return argument_parser.add_argument(
+            f'--{name}', required=True, help=f'{name}',
+            type=self.parse_fn, metavar=self.metavar, default=default,
+        )
 
 
 class PrimitiveTp(Tp):
@@ -53,12 +55,6 @@ class PrimitiveTp(Tp):
         fn = get_parse_fn(self.origin)
         return fn(option_string.strip())
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
-        return argument_parser.add_argument(
-            f'--{name}', required=True, help=f'{name}',
-            type=self.parse_fn, metavar=self.metavar, default=default,
-        )
-
 
 class ListTp(Tp):
     @property
@@ -68,16 +64,10 @@ class ListTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         option_string = option_string.strip()
         if not option_string.startswith('[') or not option_string.endswith(']'):
-            raise ValueError(f'{option_string} is not a list')
+            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
 
         option_strings = re.split(COMMA, option_string)
-        return list(self.args[0].parse_fn(s) for s in option_strings)
-
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
-        return argument_parser.add_argument(
-            f'--{name}', required=True, help=f'{name}',
-            type=self.parse_fn, metavar=self.metavar, default=default,
-        )
+        return self.origin(self.args[0].parse_fn(s) for s in option_strings)
 
 
 class HomoTupleTp(Tp):
@@ -88,16 +78,10 @@ class HomoTupleTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         option_string = option_string.strip()
         if not option_string.startswith('(') or not option_string.endswith(')'):
-            raise ValueError(f'{option_string} is not a list')
+            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
 
         option_strings = re.split(COMMA, option_string)
-        return tuple(self.args[0].parse_fn(s) for s in option_strings)
-
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
-        return argument_parser.add_argument(
-            f'--{name}', required=True, help=f'{name}',
-            type=self.parse_fn, metavar=self.metavar, default=default,
-        )
+        return self.origin(self.args[0].parse_fn(s) for s in option_strings)
 
 
 class HeteroTupleTp(Tp):
@@ -108,13 +92,11 @@ class HeteroTupleTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         option_string = option_string.strip()
         if not option_string.startswith('(') or not option_string.endswith(')'):
-            raise ValueError(f'{option_string} is not a list')
+            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
 
         option_strings = re.split(COMMA, option_string)
-        return tuple(a.parse_fn(s) for s, a in zip(option_strings, self.args))
+        assert len(option_strings) == len(self.args), \
+            f'the number of parameters is not correct, ' \
+            f'got {len(option_strings)} instead of {len(self.args)}'
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
-        return argument_parser.add_argument(
-            f'--{name}', required=True, help=f'{name}',
-            type=self.parse_fn, metavar=self.metavar, default=default,
-        )
+        return self.origin(a.parse_fn(s) for s, a in zip(option_strings, self.args))
