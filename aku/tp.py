@@ -27,6 +27,10 @@ class Tp(object, metaclass=ABCMeta):
                 return HomoTupleTp(origin, cls[args[0]])
             else:
                 return HeteroTupleTp(origin, *[cls[a] for a in args])
+        if origin is set:
+            return SetTp(origin, cls[args[0]])
+        if origin is frozenset:
+            return FrozenSetTp(origin, cls[args[0]])
 
         raise NotImplementedError(f'unsupported annotation {tp}')
 
@@ -100,3 +104,31 @@ class HeteroTupleTp(Tp):
             f'got {len(option_strings)} instead of {len(self.args)}'
 
         return self.origin(a.parse_fn(s) for s, a in zip(option_strings, self.args))
+
+
+class SetTp(Tp):
+    @property
+    def metavar(self) -> str:
+        return f'{{{self.args[0].metavar}}}'
+
+    def parse_fn(self, option_string: str) -> Any:
+        option_string = option_string.strip()
+        if not option_string.startswith('{') or not option_string.endswith('}'):
+            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
+
+        option_strings = re.split(COMMA, option_string)
+        return self.origin(self.args[0].parse_fn(s) for s in option_strings)
+
+
+class FrozenSetTp(Tp):
+    @property
+    def metavar(self) -> str:
+        return f'{{{self.args[0].metavar}}}'
+
+    def parse_fn(self, option_string: str) -> Any:
+        option_string = option_string.strip()
+        if not option_string.startswith('{') or not option_string.endswith('}'):
+            raise ValueError(f'{option_string} is not a {self.origin.__name__}')
+
+        option_strings = re.split(COMMA, option_string)
+        return self.origin(self.args[0].parse_fn(s) for s in option_strings)
