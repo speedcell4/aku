@@ -3,6 +3,9 @@ from typing import get_args, get_origin, Any
 
 from aku.parse_fn import get_parse_fn
 from argparse import ArgumentParser
+import re
+
+COMMA = re.compile(r',\s*')
 
 
 class Tp(object, metaclass=ABCMeta):
@@ -17,6 +20,8 @@ class Tp(object, metaclass=ABCMeta):
 
         if origin is None and args == ():
             return PrimitiveTp(origin, *args)
+        if origin is list and len(args) == 1:
+            return ListTp(origin, *args)
 
         raise NotImplementedError(f'unsupported annotation {tp}')
 
@@ -42,6 +47,26 @@ class PrimitiveTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         fn = get_parse_fn(self.origin)
         return fn(option_string.strip())
+
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
+        return argument_parser.add_argument(
+            f'--{name}', required=True, help=f'{name}',
+            type=self.parse_fn, metavar=self.metavar, default=default,
+        )
+
+
+class ListTp(Tp):
+    @property
+    def metavar(self) -> str:
+        return f'[{self.args[0].metavar}]'
+
+    def parse_fn(self, option_string: str) -> Any:
+        option_string = option_string.strip()
+        if not option_string.startswith('[') or not option_string.endswith(']'):
+            raise ValueError(f'{option_string} is not a list')
+
+        option_strings = re.split(COMMA, option_string)
+        return [self.args[0].parse_fn(s) for s in option_strings]
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
         return argument_parser.add_argument(
