@@ -1,18 +1,19 @@
 import re
 from abc import ABCMeta, abstractmethod
 from argparse import ArgumentParser
-from typing import get_args, get_origin, Any
+from typing import get_args, get_origin, Any, Union, Literal
 
 from aku.parse_fn import get_parse_fn
 
-COMMA = re.compile(r',\s*')
+COMMA = re.compile(r'\s*,\s*')
 
 
 class Tp(object, metaclass=ABCMeta):
-    def __init__(self, origin, *args: 'Tp') -> None:
+    def __init__(self, origin, *args: Union['Tp', Any], **kwargs: ['Tp', Any]) -> None:
         super(Tp, self).__init__()
         self.origin = origin
         self.args = args
+        self.kwargs = kwargs
 
     def __class_getitem__(cls, tp):
         args = get_args(tp)
@@ -20,15 +21,26 @@ class Tp(object, metaclass=ABCMeta):
 
         if origin is None and args == ():
             return PrimitiveTp(tp)
+
+        if origin is Literal:
+            tp = type(args[0])
+
+            assert all(isinstance(a, tp) for a in args), \
+                f'all parameters should have the same type {tp.__name__}'
+            return PrimitiveTp(tp, *set(args))
+
         if origin is list and len(args) == 1:
             return ListTp(origin, cls[args[0]])
+
         if origin is tuple:
             if len(args) == 2 and args[1] is ...:
                 return HomoTupleTp(origin, cls[args[0]])
             else:
                 return HeteroTupleTp(origin, *[cls[a] for a in args])
+
         if origin is set:
             return SetTp(origin, cls[args[0]])
+
         if origin is frozenset:
             return FrozenSetTp(origin, cls[args[0]])
 
@@ -58,6 +70,13 @@ class PrimitiveTp(Tp):
     def parse_fn(self, option_string: str) -> Any:
         fn = get_parse_fn(self.origin)
         return fn(option_string.strip())
+
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
+        return argument_parser.add_argument(
+            f'--{name}', required=True, help=f'{name}',
+            type=self.parse_fn, metavar=self.metavar, default=default,
+            choices=self.args if len(self.args) > 0 else None,
+        )
 
 
 class ListTp(Tp):
