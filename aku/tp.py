@@ -1,9 +1,9 @@
+import re
 from abc import ABCMeta, abstractmethod
+from argparse import ArgumentParser
 from typing import get_args, get_origin, Any
 
 from aku.parse_fn import get_parse_fn
-from argparse import ArgumentParser
-import re
 
 COMMA = re.compile(r',\s*')
 
@@ -22,6 +22,11 @@ class Tp(object, metaclass=ABCMeta):
             return PrimitiveTp(origin, *args)
         if origin is list and len(args) == 1:
             return ListTp(origin, *args)
+        if origin is tuple:
+            if len(args) == 2 and args[1] is ...:
+                return HomoTupleTp(origin, *args)
+            else:
+                return HeteroTupleTp(origin, *args)
 
         raise NotImplementedError(f'unsupported annotation {tp}')
 
@@ -66,7 +71,47 @@ class ListTp(Tp):
             raise ValueError(f'{option_string} is not a list')
 
         option_strings = re.split(COMMA, option_string)
-        return [self.args[0].parse_fn(s) for s in option_strings]
+        return list(self.args[0].parse_fn(s) for s in option_strings)
+
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
+        return argument_parser.add_argument(
+            f'--{name}', required=True, help=f'{name}',
+            type=self.parse_fn, metavar=self.metavar, default=default,
+        )
+
+
+class HomoTupleTp(Tp):
+    @property
+    def metavar(self) -> str:
+        return f'({self.args[0].metavar}, ...)'
+
+    def parse_fn(self, option_string: str) -> Any:
+        option_string = option_string.strip()
+        if not option_string.startswith('(') or not option_string.endswith(')'):
+            raise ValueError(f'{option_string} is not a list')
+
+        option_strings = re.split(COMMA, option_string)
+        return tuple(self.args[0].parse_fn(s) for s in option_strings)
+
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
+        return argument_parser.add_argument(
+            f'--{name}', required=True, help=f'{name}',
+            type=self.parse_fn, metavar=self.metavar, default=default,
+        )
+
+
+class HeteroTupleTp(Tp):
+    @property
+    def metavar(self) -> str:
+        return f"({', '.join([f'{a.metavar}' for a in self.args])})"
+
+    def parse_fn(self, option_string: str) -> Any:
+        option_string = option_string.strip()
+        if not option_string.startswith('(') or not option_string.endswith(')'):
+            raise ValueError(f'{option_string} is not a list')
+
+        option_strings = re.split(COMMA, option_string)
+        return tuple(a.parse_fn(s) for s, a in zip(option_strings, self.args))
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
         return argument_parser.add_argument(
