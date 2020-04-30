@@ -1,9 +1,9 @@
 import re
 from abc import ABCMeta, abstractmethod
-from argparse import ArgumentParser, SUPPRESS
+from argparse import ArgumentParser, SUPPRESS, Action
 from inspect import getfullargspec
 from itertools import zip_longest
-from typing import get_args, get_origin, get_type_hints, Any, Union, Literal
+from typing import get_args, get_origin, get_type_hints, Any, Union, Literal, Type
 
 from aku.parse_fn import get_parse_fn
 
@@ -77,7 +77,7 @@ class Tp(object, metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def parse_fn(self, option_string: str) -> Any:
+    def parse_fn(self, string: str) -> Any:
         raise NotImplementedError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
@@ -93,7 +93,7 @@ class TypeTp(Tp):
     def metavar(self) -> str:
         raise NotImplementedError
 
-    def parse_fn(self, option_string: str) -> Any:
+    def parse_fn(self, string: str) -> Any:
         raise NotImplementedError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
@@ -111,8 +111,8 @@ class PrimitiveTp(Tp):
             return f'{self.origin.__name__.lower()}'
         return f"{{{', '.join([f'{repr(a)}' for a in self.args])}}}"
 
-    def parse_fn(self, option_string: str) -> Any:
-        return get_parse_fn(self.origin)(option_string.strip())
+    def parse_fn(self, string: str) -> Any:
+        return get_parse_fn(self.origin)(string.strip())
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
         return argument_parser.add_argument(
@@ -128,13 +128,13 @@ class ListTp(Tp):
     def metavar(self) -> str:
         return f'[{self.args[0].metavar}]'
 
-    def parse_fn(self, option_string: str) -> Any:
-        option_string = option_string.strip()
-        if not option_string.startswith('[') or not option_string.endswith(']'):
-            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
+    def parse_fn(self, string: str) -> Any:
+        string = string.strip()
+        if not string.startswith('[') or not string.endswith(']'):
+            raise ValueError(f'{string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string[1:-1])
-        return self.origin(self.args[0].parse_fn(s) for s in option_strings)
+        strings = re.split(COMMA, string[1:-1])
+        return self.origin(self.args[0].parse_fn(s) for s in strings)
 
 
 class HomoTupleTp(Tp):
@@ -142,13 +142,13 @@ class HomoTupleTp(Tp):
     def metavar(self) -> str:
         return f'({self.args[0].metavar}, ...)'
 
-    def parse_fn(self, option_string: str) -> Any:
-        option_string = option_string.strip()
-        if not option_string.startswith('(') or not option_string.endswith(')'):
-            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
+    def parse_fn(self, string: str) -> Any:
+        string = string.strip()
+        if not string.startswith('(') or not string.endswith(')'):
+            raise ValueError(f'{string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string[1:-1])
-        return self.origin(self.args[0].parse_fn(s) for s in option_strings)
+        strings = re.split(COMMA, string[1:-1])
+        return self.origin(self.args[0].parse_fn(s) for s in strings)
 
 
 class HeteroTupleTp(Tp):
@@ -156,17 +156,17 @@ class HeteroTupleTp(Tp):
     def metavar(self) -> str:
         return f"({', '.join([f'{a.metavar}' for a in self.args])})"
 
-    def parse_fn(self, option_string: str) -> Any:
-        option_string = option_string.strip()
-        if not option_string.startswith('(') or not option_string.endswith(')'):
-            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
+    def parse_fn(self, string: str) -> Any:
+        string = string.strip()
+        if not string.startswith('(') or not string.endswith(')'):
+            raise ValueError(f'{string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string[1:-1])
-        assert len(option_strings) == len(self.args), \
+        strings = re.split(COMMA, string[1:-1])
+        assert len(strings) == len(self.args), \
             f'the number of arguments is not correct, ' \
-            f'got {len(option_strings)} but excepted {len(self.args)}'
+            f'got {len(strings)} but excepted {len(self.args)}'
 
-        return self.origin(a.parse_fn(s) for s, a in zip(option_strings, self.args))
+        return self.origin(a.parse_fn(s) for s, a in zip(strings, self.args))
 
 
 class SetTp(Tp):
@@ -174,13 +174,13 @@ class SetTp(Tp):
     def metavar(self) -> str:
         return f'{{{self.args[0].metavar}}}'
 
-    def parse_fn(self, option_string: str) -> Any:
-        option_string = option_string.strip()
-        if not option_string.startswith('{') or not option_string.endswith('}'):
-            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
+    def parse_fn(self, string: str) -> Any:
+        string = string.strip()
+        if not string.startswith('{') or not string.endswith('}'):
+            raise ValueError(f'{string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string[1:-1])
-        return self.origin(self.args[0].parse_fn(s) for s in option_strings)
+        strings = re.split(COMMA, string[1:-1])
+        return self.origin(self.args[0].parse_fn(s) for s in strings)
 
 
 class FrozenSetTp(Tp):
@@ -188,13 +188,13 @@ class FrozenSetTp(Tp):
     def metavar(self) -> str:
         return f'{{{self.args[0].metavar}}}'
 
-    def parse_fn(self, option_string: str) -> Any:
-        option_string = option_string.strip()
-        if not option_string.startswith('{') or not option_string.endswith('}'):
-            raise ValueError(f'{option_string} is not a(n) {self.origin.__name__}')
+    def parse_fn(self, string: str) -> Any:
+        string = string.strip()
+        if not string.startswith('{') or not string.endswith('}'):
+            raise ValueError(f'{string} is not a(n) {self.origin.__name__}')
 
-        option_strings = re.split(COMMA, option_string[1:-1])
-        return self.origin(self.args[0].parse_fn(s) for s in option_strings)
+        strings = re.split(COMMA, string[1:-1])
+        return self.origin(self.args[0].parse_fn(s) for s in strings)
 
 
 class UnionTp(Tp):
@@ -202,5 +202,20 @@ class UnionTp(Tp):
     def metavar(self) -> str:
         return f"{{{', '.join(self.kwargs.keys())}}}"
 
-    def parse_fn(self, option_string: str) -> Any:
-        return str(option_string.strip())
+    def parse_fn(self, string: str) -> Any:
+        return str(string.strip())
+
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
+        choices = self.kwargs
+
+        class _UnionTpAction(Action):
+            def __call__(self, parser: ArgumentParser, namespace, values, option_string=...) -> None:
+                Tp[Type[choices[values]]].add_argument(
+                    argument_parser=argument_parser, name=name, default=default)
+                argument_parser.parse_known_args()
+
+        argument_parser.add_argument(
+            f'--{name}', help=f'{name}', required=default == SUPPRESS,
+            type=self.parse_fn, metavar=self.metavar, action=_UnionTpAction,
+            choices=list(choices.keys()), default=default.__name__,
+        )
