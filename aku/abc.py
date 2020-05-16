@@ -8,8 +8,8 @@ class Aku(ArgumentParser):
         while last_actions_len != len(self._actions):
             last_actions_len = len(self._actions)
             namespace, args = super(Aku, self).parse_known_args(args=args, namespace=namespace)
-        return super(Aku, self).parse_known_args(args=args, namespace=namespace)
+        return namespace, args
 
     def parse_args(self, args: List[str] = None, namespace: Namespace = None):
-        namespace, args = super(Aku, self).parse_known_args(args=args, namespace=namespace)
+        namespace, args = self.parse_known_args(args=args, namespace=namespace)
         return super(Aku, self).parse_args(args=args, namespace=namespace)
