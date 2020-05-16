@@ -5,7 +5,7 @@ from inspect import getfullargspec
 from itertools import zip_longest
 from typing import get_args, get_origin, get_type_hints, Any, Union, Literal, Type
 
-from aku.parse_fn import get_parse_fn
+from aku.parsing_fn import get_parse_fn
 
 COMMA = re.compile(r'\s*,\s*')
 
@@ -212,7 +212,6 @@ class UnionTp(Tp):
             def __call__(self, parser: ArgumentParser, namespace, values, option_string=...) -> None:
                 Tp[Type[choices[values]]].add_argument(
                     argument_parser=argument_parser, name=name, default=default)
-                argument_parser.parse_known_args()
 
         argument_parser.add_argument(
             f'--{name}', help=f'{name}', required=default == SUPPRESS,
