@@ -212,6 +212,7 @@ class UnionTp(Tp):
             def __call__(self, parser: ArgumentParser, namespace, values, option_string=...) -> None:
                 Tp[Type[choices[values]]].add_argument(
                     argument_parser=argument_parser, name=name, default=default)
+                setattr(namespace, name, values)
 
         argument_parser.add_argument(
             f'--{name}', help=f'{name}', required=default == SUPPRESS,
