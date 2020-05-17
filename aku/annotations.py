@@ -1,26 +1,12 @@
 import re
 from abc import ABCMeta, abstractmethod
 from argparse import ArgumentParser, SUPPRESS, Action
-from inspect import getfullargspec
-from itertools import zip_longest
-from typing import get_args, get_origin, get_type_hints, Any, Union, Literal, Type
+from typing import get_args, get_origin, Any, Union, Literal, Type
 
 from aku.parsing_fn import get_parse_fn
+from aku.utils import fetch_annotations
 
 COMMA = re.compile(r'\s*,\s*')
-
-
-def get_type_annotations(tp):
-    tys = get_type_hints(tp)
-    spec = getfullargspec(tp)
-
-    name_default = zip_longest(
-        reversed(spec.args),
-        reversed(spec.defaults or []),
-        fillvalue=SUPPRESS,
-    )
-    for arg_name, arg_default in reversed(list(name_default)):
-        yield arg_name, arg_default, tys[arg_name]
 
 
 class Tp(object, metaclass=ABCMeta):
@@ -97,7 +83,7 @@ class TypeTp(Tp):
         raise NotImplementedError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any):
-        for arg_name, arg_default, arg_tp in get_type_annotations(self.origin):
+        for arg_name, arg_default, arg_tp in fetch_annotations(self.origin):
             Tp[arg_tp].add_argument(
                 argument_parser=argument_parser,
                 name=arg_name, default=arg_default,
