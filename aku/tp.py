@@ -1,3 +1,4 @@
+import functools
 import inspect
 import re
 from argparse import ArgumentParser, Action, Namespace, SUPPRESS
@@ -278,7 +279,7 @@ class AkuUnion(AkuTp):
                 setattr(parser, NEW_ACTIONS, getattr(parser, NEW_ACTIONS, []) + new_actions)
 
         argument_parser.add_argument(
-            f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
+            f'--{join_names(prefixes, name)}', dest=join_dests(domain + (name,), '@fn'),
             type=self.tp, choices=tuple(choices.keys()), required=True,
             action=UnionAction,
         )
@@ -296,3 +297,41 @@ class Aku(ArgumentParser):
                 break
 
         return namespace
+
+    def run(self, namespace: Namespace = None):
+        if namespace is None:
+            namespace = self.parse_args()
+        if isinstance(namespace, Namespace):
+            namespace = namespace.__dict__
+
+        args = {}
+        for key, value in namespace.items():
+            collection = args
+            *names, key = key.split('.')
+            for name in names:
+                collection = collection.setdefault(name, {})
+            if key == '@fn':
+                collection[key] = value
+            else:
+                collection.setdefault('@args', {})[key] = value
+
+        def recur(x):
+            if isinstance(x, dict):
+                if '@fn' in x:
+                    kwargs = {key: recur(value) for key, value in x['@args'].items()}
+                    return functools.partial(x['@fn'], **kwargs)
+                else:
+                    return {
+                        key: recur(value)
+                        for key, value in x.items()
+                    }
+            else:
+                return x
+
+        ret = recur(args)
+        assert len(ret) == 1
+        for _, fn in ret.items():
+            if inspect.getfullargspec(fn).varkw is None:
+                return fn()
+            else:
+                return fn(**{'@aku': args})
