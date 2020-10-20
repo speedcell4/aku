@@ -102,7 +102,7 @@ class AkuTp(object):
         raise NotImplementedError
 
 
-class StorePrimitiveAction(Action):
+class StoreAction(Action):
     def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string=None):
         setattr(namespace, self.dest, values)
         self.required = False
@@ -118,17 +118,17 @@ class AkuPrimitive(AkuTp):
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
         argument_parser.add_argument(
             f'--{name}', type=self.tp, choices=self.choices, required=True,
-            action=StorePrimitiveAction, default=default,
+            action=StoreAction, default=default,
         )
 
 
 class AppendListAction(Action):
     def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string=None):
-        flag_name = '_aku_visited'
-        if not getattr(self, flag_name, False):
+        if not getattr(self, '_aku_visited', False):
+            setattr(self, '_aku_visited', True)
             setattr(namespace, self.dest, [])
-            setattr(self, flag_name, True)
         getattr(namespace, self.dest).append(values)
+        self.required = False
 
 
 class AkuList(AkuTp):
@@ -158,7 +158,7 @@ class AkuHomoTuple(AkuTp):
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
         argument_parser.add_argument(
             f'--{name}', type=register_homo_tuple(self.tp, argument_parser), choices=self.choices, required=True,
-            action=StorePrimitiveAction, default=default,
+            action=StoreAction, default=default,
         )
 
 
@@ -175,7 +175,7 @@ class AkuHeteroTuple(AkuTp):
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
         argument_parser.add_argument(
             f'--{name}', type=register_hetero_tuple(self.tp, argument_parser), choices=self.choices, required=True,
-            action=StorePrimitiveAction, default=default,
+            action=StoreAction, default=default,
         )
 
 
@@ -193,7 +193,7 @@ class AkuLiteral(AkuTp):
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
         argument_parser.add_argument(
             f'--{name}', type=self.tp, choices=self.choices, required=True,
-            action=StorePrimitiveAction, default=default,
+            action=StoreAction, default=default,
         )
 
 
