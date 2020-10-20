@@ -80,6 +80,9 @@ class AkuTp(object):
         self.tp = tp
         self.choices = choices
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.tp.__name__}, {self.choices})'
+
     registry = []
 
     def __init_subclass__(cls, **kwargs):
@@ -90,7 +93,7 @@ class AkuTp(object):
         args = get_args(tp)
         for aku_ty in cls.registry:
             try:
-                return aku_ty[origin, args]
+                return aku_ty[tp, origin, args]
             except TypeError:
                 pass
         raise TypeError(f'unsupported annotation {tp}')
@@ -107,7 +110,7 @@ class StorePrimitiveAction(Action):
 
 class AkuPrimitive(AkuTp):
     def __class_getitem__(cls, tp):
-        origin, args = tp
+        tp, origin, args = tp
         if origin is None:
             return AkuPrimitive(tp, None)
         raise TypeError
@@ -130,7 +133,7 @@ class AppendListAction(Action):
 
 class AkuList(AkuTp):
     def __class_getitem__(cls, tp):
-        origin, args = tp
+        tp, origin, args = tp
         if origin is list:
             return AkuList(args[0], None)
         raise TypeError
@@ -144,7 +147,7 @@ class AkuList(AkuTp):
 
 class AkuHomoTuple(AkuTp):
     def __class_getitem__(cls, tp):
-        origin, args = tp
+        tp, origin, args = tp
         if origin is tuple:
             if len(args) == 2 and args[1] is ...:
                 return AkuHomoTuple(args[0], None)
@@ -161,7 +164,7 @@ class AkuHomoTuple(AkuTp):
 
 class AkuHeteroTuple(AkuTp):
     def __class_getitem__(cls, tp):
-        origin, args = tp
+        tp, origin, args = tp
         if origin is tuple:
             if len(args) == 2 and args[1] is ...:
                 return AkuHomoTuple(args[0], None)
@@ -178,7 +181,7 @@ class AkuHeteroTuple(AkuTp):
 
 class AkuLiteral(AkuTp):
     def __class_getitem__(cls, tp):
-        origin, args = tp
+        tp, origin, args = tp
         if origin is Literal:
             if len(args) > 0:
                 tp = type(args[0])
@@ -196,7 +199,7 @@ class AkuLiteral(AkuTp):
 
 class AkuType(AkuTp):
     def __class_getitem__(cls, tp):
-        origin, args = tp
+        tp, origin, args = tp
         if origin is type:
             if len(args) == 1:
                 if get_origin(args[0]) == Union:
@@ -215,7 +218,7 @@ class AkuType(AkuTp):
 
 class AkuUnion(AkuTp):
     def __class_getitem__(cls, tp):
-        origin, args = tp
+        tp, origin, args = tp
         if origin is type:
             if len(args) == 1:
                 if get_origin(args[0]) == Union:
