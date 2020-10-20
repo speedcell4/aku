@@ -3,7 +3,7 @@ import inspect
 import re
 from argparse import ArgumentParser, Action, Namespace, SUPPRESS, ArgumentDefaultsHelpFormatter
 from re import Pattern
-from typing import Union, Tuple, Literal, Any
+from typing import Union, Tuple, Literal, Any, Type
 from typing import get_origin, get_args, get_type_hints
 
 from aku.utils import get_max_help_position
@@ -234,10 +234,12 @@ class AkuFn(AkuTp):
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
-        if name.endswith('_'):
-            prefixes = prefixes + (name[:-1],)
 
-        domain = domain + (name,)
+        if name is not None:
+            domain = domain + (name,)
+            if name.endswith('_'):
+                prefixes = prefixes + (name[:-1],)
+
         for arg, tp, df in tp_iter(self.tp):
             tp = AkuTp[tp]
             tp.add_argument(
@@ -312,7 +314,18 @@ class Aku(ArgumentParser):
         )
         _init_argument_parser(self)
 
+        self._functions = []
+
+    def option(self, fn):
+        self._functions.append(Type[fn])
+        return fn
+
     def parse_args(self, args=None) -> Namespace:
+        AkuTp[Union[tuple(self._functions)]].add_argument(
+            self, name='root', default=SUPPRESS,
+            prefixes=(), domain=(),
+        )
+
         namespace, args = None, None
         while True:
             namespace, args = self.parse_known_args(args=args, namespace=namespace)
