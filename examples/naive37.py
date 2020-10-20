@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import List, Literal
-from typing import Tuple
+from typing import List, Tuple
 
-from aku.tp import Aku
+from aku import Aku, Literal
 
 aku = Aku()
 

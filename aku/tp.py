@@ -3,10 +3,9 @@ import inspect
 import re
 from argparse import ArgumentParser, Action, Namespace, SUPPRESS, ArgumentDefaultsHelpFormatter
 from re import Pattern
-from typing import Union, Tuple, Literal, Any, Type
-from typing import get_origin, get_args, get_type_hints
+from typing import Union, Tuple, Any, Type, get_type_hints
 
-from aku.utils import get_max_help_position
+from aku.compat import Literal, get_origin, get_args
 
 NEW_ACTIONS = '_new_actions'
 
@@ -298,7 +297,7 @@ class Aku(ArgumentParser):
                  parents=(),
                  formatter_class=functools.partial(
                      ArgumentDefaultsHelpFormatter,
-                     max_help_position=get_max_help_position(),
+                     max_help_position=82,
                  ),
                  prefix_chars='-',
                  fromfile_prefix_chars=None,
