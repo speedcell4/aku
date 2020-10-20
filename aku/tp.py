@@ -74,6 +74,16 @@ def tp_iter(fn):
         yield arg, tps[arg], defaults.get(arg, SUPPRESS)
 
 
+def join_names(prefixes: Tuple[str, ...], name: str) -> str:
+    if name.endswith('_'):
+        name = name[:-1]
+    return '-'.join(prefixes + (name,)).lower()
+
+
+def join_dests(domain: Tuple[str, ...], name: str) -> str:
+    return '.'.join(domain + (name,)).lower()
+
+
 class AkuTp(object):
     def __init__(self, tp, choices):
         super(AkuTp, self).__init__()
@@ -98,7 +108,8 @@ class AkuTp(object):
                 pass
         raise TypeError(f'unsupported annotation {tp}')
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         raise NotImplementedError
 
 
@@ -115,9 +126,11 @@ class AkuPrimitive(AkuTp):
             return AkuPrimitive(tp, None)
         raise TypeError
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
-            f'--{name}', type=self.tp, choices=self.choices, required=True,
+            f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
+            type=self.tp, choices=self.choices, required=True,
             action=StoreAction, default=default,
         )
 
@@ -138,9 +151,11 @@ class AkuList(AkuTp):
             return AkuList(args[0], None)
         raise TypeError
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
-            f'--{name}', type=self.tp, choices=self.choices, required=True,
+            f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
+            type=self.tp, choices=self.choices, required=True,
             action=AppendListAction, default=default,
         )
 
@@ -155,9 +170,11 @@ class AkuHomoTuple(AkuTp):
                 return AkuHeteroTuple(args, None)
         raise TypeError
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
-            f'--{name}', type=register_homo_tuple(self.tp, argument_parser), choices=self.choices, required=True,
+            f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
+            type=register_homo_tuple(self.tp, argument_parser), choices=self.choices, required=True,
             action=StoreAction, default=default,
         )
 
@@ -172,9 +189,11 @@ class AkuHeteroTuple(AkuTp):
                 return AkuHeteroTuple(args, None)
         raise TypeError
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
-            f'--{name}', type=register_hetero_tuple(self.tp, argument_parser), choices=self.choices, required=True,
+            f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
+            type=register_hetero_tuple(self.tp, argument_parser), choices=self.choices, required=True,
             action=StoreAction, default=default,
         )
 
@@ -190,14 +209,16 @@ class AkuLiteral(AkuTp):
                 return AkuLiteral(tp, args)
         raise TypeError
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
-            f'--{name}', type=self.tp, choices=self.choices, required=True,
+            f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
+            type=self.tp, choices=self.choices, required=True,
             action=StoreAction, default=default,
         )
 
 
-class AkuType(AkuTp):
+class AkuFn(AkuTp):
     def __class_getitem__(cls, tp):
         tp, origin, args = tp
         if origin is type:
@@ -205,15 +226,21 @@ class AkuType(AkuTp):
                 if get_origin(args[0]) == Union:
                     return AkuUnion(str, get_args(args[0]))
                 else:
-                    return AkuType(args[0], None)
+                    return AkuFn(args[0], None)
         raise TypeError
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
+        if name.endswith('_'):
+            prefixes = prefixes + (name[:-1],)
+
+        domain = domain + (name,)
         for arg, tp, df in tp_iter(self.tp):
             tp = AkuTp[tp]
-            if name.endswith('_'):
-                arg = f'{name}{arg}'
-            tp.add_argument(argument_parser=argument_parser, name=arg, default=df)
+            tp.add_argument(
+                argument_parser=argument_parser, name=arg,
+                prefixes=prefixes, domain=domain, default=df,
+            )
 
 
 class AkuUnion(AkuTp):
@@ -224,7 +251,7 @@ class AkuUnion(AkuTp):
                 if get_origin(args[0]) == Union:
                     return AkuUnion(str, get_args(args[0]))
                 else:
-                    return AkuType(args[0], None)
+                    return AkuFn(args[0], None)
         elif origin is Union:
             args = [
                 get_args(arg)[0]
@@ -233,21 +260,25 @@ class AkuUnion(AkuTp):
             return AkuUnion(str, args)
         raise TypeError
 
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any) -> None:
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         choices = {c.__name__: c for c in self.choices}
 
         class UnionAction(Action):
             def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string=None):
-                setattr(namespace, self.dest, values)
+                setattr(namespace, self.dest, choices[values])
                 self.required = False
 
                 num_actions = len(parser._actions)
-                AkuType(choices[values], None).add_argument(argument_parser=parser, name=name, default=None)
+                AkuFn(choices[values], None).add_argument(
+                    argument_parser=parser, name=name,
+                    prefixes=prefixes, domain=domain, default=None,
+                )
                 parser._actions, new_actions = parser._actions[:num_actions], parser._actions[num_actions:]
                 setattr(parser, NEW_ACTIONS, getattr(parser, NEW_ACTIONS, []) + new_actions)
 
         argument_parser.add_argument(
-            f'--{name}' if not name.endswith('_') else f'--{name[:-1]}',
+            f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
             type=self.tp, choices=tuple(choices.keys()), required=True,
             action=UnionAction,
         )

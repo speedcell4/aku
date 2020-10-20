@@ -1,6 +1,6 @@
 from argparse import ArgumentDefaultsHelpFormatter, SUPPRESS
 from typing import Type
-from typing import Union, List, Tuple, Literal
+from typing import Union, List, Literal
 
 from aku.tp import Aku, _init_argument_parser, AkuTp
 
@@ -12,24 +12,19 @@ if __name__ == '__main__':
     _init_argument_parser(parser)
 
 
-    def foo(f1: int = 3, f2: str = '4'):
-        print(f'a => {f1}')
-        print(f'w => {f2}')
+    def foo(x: int = 3, y: str = '4'):
+        print(f'x => {x}')
+        print(f'y => {y}')
 
 
-    def bar(b1: Literal[1, 2, 3] = 2, b2: List[int] = [2, 3, 4]):
-        print(f'c => {b1}')
-        print(f'd => {b2}')
+    def bar(x: Literal[1, 2, 3] = 2, y: List[int] = [2, 3, 4]):
+        print(f'x => {x}')
+        print(f'y => {y}')
 
 
-    def baz(z1: Tuple[int, str], z2: Tuple[float, ...]):
-        pass
-
-
-    def nice(a: Type[Union[foo, bar, baz]]):
-        pass
-
-
-    AkuTp[Type[nice]].add_argument(parser, 'nice', SUPPRESS)
+    AkuTp[Type[Union[foo, bar]]].add_argument(
+        argument_parser=parser, name='fn_', default=SUPPRESS,
+        prefixes=(), domain=(),
+    )
 
     print(parser.parse_args())
