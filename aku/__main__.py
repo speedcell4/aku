@@ -9,7 +9,7 @@ if __name__ == '__main__':
     aku = Aku()
 
 
-    def foo(x: int = 3, y: str = '4', z: bool = True, w: Path = Path.home(), **kwargs):
+    def foo(x: int, y: str = '4', z: bool = True, w: Path = Path.home(), **kwargs):
         for _ in range(x):
             print(f'foo => {y}')
         print(f'z => {z}')
