@@ -1,19 +1,12 @@
 import functools
 import inspect
 import re
-from argparse import ArgumentParser, Action, Namespace, SUPPRESS
+from argparse import ArgumentParser, Action, Namespace, SUPPRESS, ArgumentDefaultsHelpFormatter
 from re import Pattern
 from typing import Union, Tuple, Literal, Any
 from typing import get_origin, get_args, get_type_hints
 
 NEW_ACTIONS = '_new_actions'
-
-
-def tp_none(arg_strings: str) -> type(None):
-    arg_strings = arg_strings.lower().strip()
-    if arg_strings in ('nil', 'null', 'none'):
-        return None
-    raise ValueError
 
 
 def tp_bool(arg_strings: str) -> bool:
@@ -131,7 +124,7 @@ class AkuPrimitive(AkuTp):
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
             f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
-            type=self.tp, choices=self.choices, required=True,
+            type=self.tp, choices=self.choices, required=default == SUPPRESS,
             action=StoreAction, default=default,
         )
 
@@ -156,7 +149,7 @@ class AkuList(AkuTp):
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
             f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
-            type=self.tp, choices=self.choices, required=True,
+            type=self.tp, choices=self.choices, required=default == SUPPRESS,
             action=AppendListAction, default=default,
         )
 
@@ -175,7 +168,7 @@ class AkuHomoTuple(AkuTp):
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
             f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
-            type=register_homo_tuple(self.tp, argument_parser), choices=self.choices, required=True,
+            type=register_homo_tuple(self.tp, argument_parser), choices=self.choices, required=default == SUPPRESS,
             action=StoreAction, default=default,
         )
 
@@ -194,7 +187,7 @@ class AkuHeteroTuple(AkuTp):
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
             f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
-            type=register_hetero_tuple(self.tp, argument_parser), choices=self.choices, required=True,
+            type=register_hetero_tuple(self.tp, argument_parser), choices=self.choices, required=default == SUPPRESS,
             action=StoreAction, default=default,
         )
 
@@ -205,7 +198,8 @@ class AkuLiteral(AkuTp):
         if origin is Literal:
             if len(args) > 0:
                 tp = type(args[0])
-                for arg in args[1:]:
+                for arg in args:
+                    assert get_origin(arg) is None, f'{arg} is not a primitive type'
                     assert isinstance(arg, tp), f'{type(arg)} is not {tp}'
                 return AkuLiteral(tp, args)
         raise TypeError
@@ -214,7 +208,7 @@ class AkuLiteral(AkuTp):
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         argument_parser.add_argument(
             f'--{join_names(prefixes, name)}', dest=join_dests(domain, name),
-            type=self.tp, choices=self.choices, required=True,
+            type=self.tp, choices=self.choices, required=default == SUPPRESS,
             action=StoreAction, default=default,
         )
 
@@ -280,12 +274,32 @@ class AkuUnion(AkuTp):
 
         argument_parser.add_argument(
             f'--{join_names(prefixes, name)}', dest=join_dests(domain + (name,), '@fn'),
-            type=self.tp, choices=tuple(choices.keys()), required=True,
+            type=self.tp, choices=tuple(choices.keys()), required=default == SUPPRESS,
             action=UnionAction,
         )
 
 
 class Aku(ArgumentParser):
+    def __init__(self, prog=__file__,
+                 usage=None,
+                 description=None,
+                 epilog=None,
+                 parents=(),
+                 formatter_class=ArgumentDefaultsHelpFormatter,
+                 prefix_chars='-',
+                 fromfile_prefix_chars=None,
+                 argument_default=None,
+                 conflict_handler='error',
+                 add_help=True,
+                 allow_abbrev=True,
+                 exit_on_error=True) -> None:
+        super(Aku, self).__init__(
+            prog, usage, description, epilog, parents, formatter_class, prefix_chars,
+            fromfile_prefix_chars, argument_default, conflict_handler, add_help, allow_abbrev,
+            exit_on_error,
+        )
+        _init_argument_parser(self)
+
     def parse_args(self, args=None) -> Namespace:
         namespace, args = None, None
         while True:

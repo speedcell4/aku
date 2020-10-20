@@ -1,20 +1,17 @@
-from argparse import ArgumentDefaultsHelpFormatter, SUPPRESS
+from argparse import SUPPRESS
 from typing import Type
 from typing import Union, List, Literal
 
-from aku.tp import Aku, _init_argument_parser, AkuTp
+from aku.tp import Aku, AkuTp
 
 if __name__ == '__main__':
-    aku = Aku(
-        prog='oar', usage=None, description=None,
-        formatter_class=ArgumentDefaultsHelpFormatter,
-    )
-    _init_argument_parser(aku)
+    aku = Aku()
 
 
-    def foo(x: int = 3, y: str = '4', **kwargs):
+    def foo(x: int = 3, y: str = '4', z: bool = True, **kwargs):
         for _ in range(x):
             print(f'foo => {y}')
+        print(f'z => {z}')
         print(kwargs['@aku'])
 
 
@@ -25,7 +22,7 @@ if __name__ == '__main__':
 
 
     AkuTp[Type[Union[foo, bar]]].add_argument(
-        argument_parser=aku, name='fn_', default=SUPPRESS,
+        argument_parser=aku, name='fn', default=SUPPRESS,
         prefixes=(), domain=(),
     )
 
