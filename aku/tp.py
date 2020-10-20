@@ -6,6 +6,8 @@ from re import Pattern
 from typing import Union, Tuple, Literal, Any
 from typing import get_origin, get_args, get_type_hints
 
+from aku.utils import get_max_help_position
+
 NEW_ACTIONS = '_new_actions'
 
 
@@ -292,7 +294,10 @@ class Aku(ArgumentParser):
                  description=None,
                  epilog=None,
                  parents=(),
-                 formatter_class=ArgumentDefaultsHelpFormatter,
+                 formatter_class=functools.partial(
+                     ArgumentDefaultsHelpFormatter,
+                     max_help_position=get_max_help_position(),
+                 ),
                  prefix_chars='-',
                  fromfile_prefix_chars=None,
                  argument_default=None,
