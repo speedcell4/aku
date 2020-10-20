@@ -1,82 +1,9 @@
-import functools
-import inspect
-import re
-from argparse import ArgumentParser, Action, Namespace, SUPPRESS, ArgumentDefaultsHelpFormatter
-from re import Pattern
-from typing import Union, Tuple, Any, Type, get_type_hints
+from argparse import ArgumentParser, Action, Namespace, SUPPRESS
+from typing import Union, Tuple, Any
 
+from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-
-NEW_ACTIONS = '_new_actions'
-
-
-def tp_bool(arg_strings: str) -> bool:
-    arg_strings = arg_strings.lower().strip()
-    if arg_strings in ('t', 'true', 'y', 'yes', '1'):
-        return True
-    if arg_strings in ('f', 'false', 'n', 'no', '0'):
-        return False
-    raise ValueError
-
-
-def register_type(fn, argument_parser: ArgumentParser):
-    tp = get_type_hints(fn)['return']
-    registry = argument_parser._registries['type']
-    if tp not in registry:
-        registry.setdefault(tp, fn)
-    return fn
-
-
-def register_homo_tuple(tp: type, argument_parser: ArgumentParser,
-                        pattern: Pattern = re.compile(r',\s*')) -> None:
-    def fn(arg_strings: str) -> Tuple[tp, ...]:
-        nonlocal tp
-
-        tp = argument_parser._registry_get('type', tp, tp)
-        return tuple(tp(arg) for arg in re.split(pattern, arg_strings.strip()))
-
-    return register_type(fn, argument_parser)
-
-
-def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser,
-                          pattern: Pattern = re.compile(r',\s*')) -> None:
-    def fn(arg_strings: str) -> Tuple[tps]:
-        nonlocal tps
-
-        tps = [argument_parser._registry_get('type', tp, tp) for tp in tps]
-        return tuple(tp(arg) for tp, arg in zip(tps, re.split(pattern, arg_strings.strip())))
-
-    return register_type(fn, argument_parser)
-
-
-def _init_argument_parser(argument_parser: ArgumentParser):
-    register_type(tp_bool, argument_parser)
-
-
-def tp_iter(fn):
-    is_method = inspect.ismethod(fn)
-    if inspect.isclass(fn):
-        fn = fn.__init__
-        is_method = True
-
-    tps = get_type_hints(fn)
-    spec = inspect.getfullargspec(fn)
-    args = spec.args or []
-    defaults = spec.defaults or []
-    defaults = {a: d for a, d in zip(args[::-1], defaults[::-1])}
-
-    for index, arg in enumerate(args[1:] if is_method else args):
-        yield arg, tps[arg], defaults.get(arg, SUPPRESS)
-
-
-def join_names(prefixes: Tuple[str, ...], name: str) -> str:
-    if name.endswith('_'):
-        name = name[:-1]
-    return '-'.join(prefixes + (name,)).lower()
-
-
-def join_dests(domain: Tuple[str, ...], name: str) -> str:
-    return '.'.join(domain + (name,)).lower()
+from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, NEW_ACTIONS
 
 
 class AkuTp(object):
@@ -108,12 +35,6 @@ class AkuTp(object):
         raise NotImplementedError
 
 
-class StoreAction(Action):
-    def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string=None):
-        setattr(namespace, self.dest, values)
-        self.required = False
-
-
 class AkuPrimitive(AkuTp):
     def __class_getitem__(cls, tp):
         tp, origin, args = tp
@@ -129,15 +50,6 @@ class AkuPrimitive(AkuTp):
             type=self.tp, choices=self.choices, required=default == SUPPRESS,
             action=StoreAction, default=default, metavar=self.tp.__name__.lower(),
         )
-
-
-class AppendListAction(Action):
-    def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string=None):
-        if not getattr(self, '_aku_visited', False):
-            setattr(self, '_aku_visited', True)
-            setattr(namespace, self.dest, [])
-        getattr(namespace, self.dest).append(values)
-        self.required = False
 
 
 class AkuList(AkuTp):
@@ -287,89 +199,3 @@ class AkuUnion(AkuTp):
             type=self.tp, choices=tuple(choices.keys()), required=True, default=SUPPRESS,
             action=UnionAction, metavar=f'{{{", ".join(choices.keys())}}}[fn]'
         )
-
-
-class Aku(ArgumentParser):
-    def __init__(self, prog=__file__,
-                 usage=None,
-                 description=None,
-                 epilog=None,
-                 parents=(),
-                 formatter_class=functools.partial(
-                     ArgumentDefaultsHelpFormatter,
-                     max_help_position=82,
-                 ),
-                 prefix_chars='-',
-                 fromfile_prefix_chars=None,
-                 argument_default=None,
-                 conflict_handler='error',
-                 add_help=True,
-                 allow_abbrev=True) -> None:
-        super(Aku, self).__init__(
-            prog=prog, usage=usage, description=description, epilog=epilog,
-            parents=parents, formatter_class=formatter_class, prefix_chars=prefix_chars,
-            fromfile_prefix_chars=fromfile_prefix_chars, argument_default=argument_default,
-            conflict_handler=conflict_handler, add_help=add_help, allow_abbrev=allow_abbrev,
-        )
-        _init_argument_parser(self)
-
-        self._functions = []
-
-    def option(self, fn):
-        self._functions.append(Type[fn])
-        return fn
-
-    def parse_args(self, args=None) -> Namespace:
-        AkuTp[Union[tuple(self._functions)]].add_argument(
-            self, name='root', default=SUPPRESS,
-            prefixes=(), domain=(),
-        )
-
-        namespace, args = None, None
-        while True:
-            namespace, args = self.parse_known_args(args=args, namespace=namespace)
-            if hasattr(self, NEW_ACTIONS):
-                self._actions = self._actions + getattr(self, NEW_ACTIONS)
-                delattr(self, NEW_ACTIONS)
-            else:
-                break
-
-        return namespace
-
-    def run(self, namespace: Namespace = None):
-        if namespace is None:
-            namespace = self.parse_args()
-        if isinstance(namespace, Namespace):
-            namespace = namespace.__dict__
-
-        args = {}
-        for key, value in namespace.items():
-            collection = args
-            *names, key = key.split('.')
-            for name in names:
-                collection = collection.setdefault(name, {})
-            if key == '@fn':
-                collection[key] = value
-            else:
-                collection.setdefault('@args', {})[key] = value
-
-        def recur(x):
-            if isinstance(x, dict):
-                if '@fn' in x:
-                    kwargs = {key: recur(value) for key, value in x['@args'].items()}
-                    return functools.partial(x['@fn'], **kwargs)
-                else:
-                    return {
-                        key: recur(value)
-                        for key, value in x.items()
-                    }
-            else:
-                return x
-
-        ret = recur(args)
-        assert len(ret) == 1
-        for _, fn in ret.items():
-            if inspect.getfullargspec(fn).varkw is None:
-                return fn()
-            else:
-                return fn(**{'@aku': args})
