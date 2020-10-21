@@ -1,6 +1,7 @@
 # Aku
 
 [![Actions Status](https://github.com/speedcell4/aku/workflows/unit-tests/badge.svg)](https://github.com/speedcell4/aku/actions)
+[![Downloads](https://pepy.tech/badge/aku)](https://pepy.tech/project/aku)
 
 An Annotation-driven ArgumentParser Generator
 
