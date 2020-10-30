@@ -20,7 +20,7 @@ class AkuTp(object):
     def __init_subclass__(cls, **kwargs):
         cls.registry.append(cls)
 
-    def __class_getitem__(cls, tp):
+    def __class_getitem__(cls, tp) -> 'AkuTp':
         origin = get_origin(tp)
         args = get_args(tp)
         for aku_ty in cls.registry:

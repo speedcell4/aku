@@ -35,7 +35,7 @@ aku.run()
 `aku` will automatically add argument options according to your function signature.
 
 ```shell script
-python3 foo.py --help
+python examples/foo.py --help
 usage: foo.py [-h] --a int [--b int]
 
 optional arguments:

@@ -8,7 +8,7 @@ from aku.utils import _init_argument_parser, NEW_ACTIONS
 
 
 class Aku(ArgumentParser):
-    def __init__(self, prog=__file__,
+    def __init__(self, prog=None,
                  usage=None,
                  description=None,
                  epilog=None,
@@ -39,7 +39,7 @@ class Aku(ArgumentParser):
 
     def parse_args(self, args=None) -> Namespace:
         AkuTp[Union[tuple(self._functions)]].add_argument(
-            self, name='root', default=SUPPRESS,
+            argument_parser=self, name='root', default=SUPPRESS,
             prefixes=(), domain=(),
         )
 
