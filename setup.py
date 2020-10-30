@@ -1,18 +1,12 @@
-from setuptools import setup
+from setuptools import setup, find_packages
+
+name = 'aku'
 
 setup(
-    name='aku',
-    description='An Annotation-driven ArgumentParser Generator',
+    name=name,
+    description='An interactive annotation-driven ArgumentParser generator',
     version='0.2.0',
-    packages=['aku'],
-    classifiers=[
-        'Programming Language :: Python :: 3 :: Only',
-        'Development Status :: 2 - Pre-Alpha',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Unix',
-        'Topic :: Utilities',
-    ],
+    packages=[package for package in find_packages() if package.startswith(name)],
     url='https://github.com/speedcell4/aku',
     license='MIT',
     author='speedcell4',
