@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from aku.compat import Literal, get_origin, get_args
 from aku.aku import Aku
+from aku.compat import Literal, get_origin, get_args
 
 __all__ = [
-    'Literal', 'get_origin', 'get_args',
+    'Aku', 'Literal', 'get_origin', 'get_args',
 ]
