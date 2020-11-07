@@ -28,6 +28,8 @@ python -m pip install aku --upgrade
 
 ## Usage
 
+### Primitive Types
+
 The key idea of aku to generate `ArgumentParser` according to the type annotations of functions. For example, to register single function with only primitive types, i.e., `int`, `bool`, `str`, `float`, `Path`, etc.
 
 ```python
@@ -127,4 +129,54 @@ optional arguments:
 
 ~ python examples/bar.py add --x 1 --y 2
 1 + 2 => 3
+```
+
+### Nested Types
+
+```python
+from typing import List, Tuple
+
+from aku import Aku, Literal
+
+aku = Aku()
+
+
+@aku.option
+def baz(a: List[int], b: Tuple[bool, ...], c: Tuple[int, bool, str], d: Literal[42, 1905]):
+    print(f'a => {a}')
+    print(f'b => {b}')
+    print(f'c => {c}')
+    print(f'd => {d}')
+
+
+if __name__ == '__main__':
+    aku.run()
+```
+
+* argument `a` is annotated with `List[int]`, thus every `--a` appends one item at the end of existing list
+* homogenous tuple holds arbitrary number of elements with the same type, while heterogeneous tuple holds specialized number of elements with specialized type
+* literal arguments can be assigned value from the specified ones
+
+```shell script
+~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,true,false,false,true" --c 42,true,"yes" --d 42
+a => [1, 2, 3]
+b => (True, True, False, False, True)
+c => (42, True, 'yes')
+d => 42
+
+~ python examples/baz.py --a 1 --a 2 --a nice --b "true,wow" --c 42,true,"yes" --d 42
+usage: baz.py [-h] [--a [int]] --b bool, ...) --c (int, bool, str --d int{1905, 42}
+baz.py: error: argument --a: invalid int value: 'nice'
+
+~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,wow" --c 42,true,"yes" --d 42   
+usage: baz.py [-h] [--a [int]] --b bool, ...) --c (int, bool, str --d int{1905, 42}
+baz.py: error: argument --b: invalid fn value: 'true,wow'
+
+~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,true,false,false,true" --c 42,true,"yes,43" --d 42
+usage: baz.py [-h] [--a [int]] [--b bool, ...)] --c (int, bool, str --d int{1905, 42}
+baz.py: error: argument --c: invalid fn value: '42,true,yes,43'
+
+~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,true,false,false,true" --c 42,true,"yes" --d 43
+usage: baz.py [-h] [--a [int]] [--b bool, ...)] [--c (int, bool, str] --d int{1905, 42}
+baz.py: error: argument --d: invalid choice: 43 (choose from 42, 1905)
 ```
