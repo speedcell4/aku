@@ -38,22 +38,16 @@ class Aku(ArgumentParser):
         self._functions.append(fn)
         return fn
 
-    @staticmethod
-    def _add_root_function(argument_parser, fn, name):
-        AkuTp[Type[fn]].add_argument(
-            argument_parser=argument_parser, name='@root', default=SUPPRESS,
-            prefixes=(), domain=(),
-        )
-        return Namespace(**{'@root.@fn': (fn, name)})
-
     def parse_args(self, args=None) -> Namespace:
         assert len(self._functions) > 0
 
         namespace, args, argument_parser = None, sys.argv, self
         if len(self._functions) == 1:
             fn = self._functions[0]
-            name = fetch_name(fn)
-            namespace = self._add_root_function(argument_parser, fn, name)
+            AkuTp[Type[fn]].add_argument(
+                argument_parser=argument_parser, name='@root', default=SUPPRESS,
+                prefixes=(), domain=(),
+            )
         else:
             subparsers = self.add_subparsers()
             functions = {}
@@ -66,7 +60,10 @@ class Aku(ArgumentParser):
 
             if len(args) > 1 and args[1] in functions:
                 fn, argument_parser = functions[args[1]]
-                namespace = self._add_root_function(argument_parser, fn, args[1])
+                AkuTp[Type[fn]].add_argument(
+                    argument_parser=argument_parser, name='@root', default=SUPPRESS,
+                    prefixes=(), domain=(),
+                )
 
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)

@@ -151,6 +151,7 @@ class AkuFn(AkuTp):
             if name.endswith('_'):
                 prefixes = prefixes + (name[:-1],)
 
+        argument_parser.set_defaults(**{join_dests(domain, f'@fn'): (self.tp, name)})
         for arg, tp, df in tp_iter(self.tp):
             tp = AkuTp[tp]
             tp.add_argument(

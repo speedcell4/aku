@@ -5,6 +5,10 @@ from typing import get_type_hints, Pattern, Tuple
 
 NEW_ACTIONS = '_new_actions'
 
+AKU = '@aku'
+AKU_FN = '@fn'
+AKU_ROOT = '@root'
+
 
 def tp_bool(arg_strings: str) -> bool:
     arg_strings = arg_strings.lower().strip()

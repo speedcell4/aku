@@ -28,6 +28,11 @@ def bar(x: Literal[1, 2, 3] = 2, y: List[int] = [2, 3, 4],
 
 
 @aku.option
+def delay(work: Type[foo]):
+    work()
+
+
+@aku.option
 def both(work: Union[Type[foo], Type[bar]]):
     work()
 
