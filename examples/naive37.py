@@ -32,4 +32,21 @@ def both(work: Union[Type[foo], Type[bar]]):
     work()
 
 
+class A(object):
+    @classmethod
+    def baz(cls, x: int):
+        print(f'{A.__name__}.x => {x}')
+
+
+aku.option(A.baz)
+
+
+class B(object):
+    @classmethod
+    def baz(cls, x: int):
+        print(f'{B.__name__}.x => {x}')
+
+
+aku.option(B.baz)
+
 print(aku.run())

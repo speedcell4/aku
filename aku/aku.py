@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import _init_argument_parser, NEW_ACTIONS
+from aku.utils import _init_argument_parser, NEW_ACTIONS, fetch_name
 
 
 class Aku(ArgumentParser):
@@ -52,13 +52,18 @@ class Aku(ArgumentParser):
         namespace, args, argument_parser = None, sys.argv, self
         if len(self._functions) == 1:
             fn = self._functions[0]
-            namespace = self._add_root_function(argument_parser, fn, fn.__name__)
+            name = fetch_name(fn)
+            namespace = self._add_root_function(argument_parser, fn, name)
         else:
             subparsers = self.add_subparsers()
-            functions = {
-                fn.__name__: (fn, subparsers.add_parser(name=fn.__name__))
-                for fn in self._functions
-            }
+            functions = {}
+            for fn in self._functions:
+                name = fetch_name(fn)
+                if name not in functions:
+                    functions[name] = (fn, subparsers.add_parser(name=name))
+                else:
+                    raise ValueError(f'{name} was already registered')
+
             if len(args) > 1 and args[1] in functions:
                 fn, argument_parser = functions[args[1]]
                 namespace = self._add_root_function(argument_parser, fn, args[1])

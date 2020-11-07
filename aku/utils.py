@@ -69,6 +69,22 @@ def tp_iter(fn):
         yield arg, tps[arg], defaults.get(arg, SUPPRESS)
 
 
+def fetch_name(fn) -> str:
+    if inspect.isfunction(fn):  # function, static method
+        return fn.__name__
+    if inspect.isclass(fn):  # class
+        return fn.__name__.lower()
+    if inspect.ismethod(fn):  # class method
+        __class__ = fn.__self__
+        if not inspect.isclass(__class__):
+            __class__ = __class__.__class__
+
+        return f'{__class__.__name__.lower()}.{fn.__name__}'
+    if callable(fn):  # __call__
+        return f'{fn.__class__.__name__.lower()}'
+    raise NotImplementedError
+
+
 def join_names(prefixes: Tuple[str, ...], name: str) -> str:
     if name.endswith('_'):
         name = name[:-1]
