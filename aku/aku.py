@@ -23,7 +23,7 @@ class Aku(ArgumentParser):
                  argument_default=None,
                  conflict_handler='error',
                  add_help=True,
-                 allow_abbrev=True) -> None:
+                 allow_abbrev=False) -> None:
         super(Aku, self).__init__(
             prog=prog, usage=usage, description=description, epilog=epilog,
             parents=parents, formatter_class=formatter_class, prefix_chars=prefix_chars,
