@@ -177,27 +177,11 @@ optional arguments:
   --c (int, bool, str)  c
   --d int{1905, 42}     d
 
-~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,true,false,false,true" --c 42,true,"yes" --d 42
+~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,false,false,true" --c 42,true,"yes" --d 42
 a => [1, 2, 3]
-b => (True, True, False, False, True)
+b => (True, False, False, True)
 c => (42, True, 'yes')
 d => 42
-
-~ python examples/baz.py --a 1 --a 2 --a nice --b "true,wow" --c 42,true,"yes" --d 42
-usage: baz.py [-h] [--a [int]] --b bool, ...) --c (int, bool, str --d int{1905, 42}
-baz.py: error: argument --a: invalid int value: 'nice'
-
-~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,wow" --c 42,true,"yes" --d 42   
-usage: baz.py [-h] [--a [int]] --b bool, ...) --c (int, bool, str --d int{1905, 42}
-baz.py: error: argument --b: invalid fn value: 'true,wow'
-
-~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,true,false,false,true" --c 42,true,"yes,43" --d 42
-usage: baz.py [-h] [--a [int]] [--b bool, ...)] --c (int, bool, str --d int{1905, 42}
-baz.py: error: argument --c: invalid fn value: '42,true,yes,43'
-
-~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,true,false,false,true" --c 42,true,"yes" --d 43
-usage: baz.py [-h] [--a [int]] [--b bool, ...)] [--c (int, bool, str] --d int{1905, 42}
-baz.py: error: argument --d: invalid choice: 43 (choose from 42, 1905)
 ```
 
 ### Nested Types
