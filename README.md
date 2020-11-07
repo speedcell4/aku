@@ -18,22 +18,21 @@ python -m pip install aku --upgrade
 
 ## Type Annotations
 
-* primitive types, 
-    - e.g., `int`, `bool`, `str`, `float`, `Path`, etc.
-* container types
-    - list `List[T]` 
-    - homogeneous tuple, e.g., `Tuple[T, ...]`
-    - heterogeneous tuple, e.g., `Tuple[T1, T2, T3]`
-    - literal, e.g., `Literal[42, 1905]`
-* nested types
-    - function, e.g., `Type[<func_name>]`
-    - union of functions, e.g., `Union[Type[<func1_name>], Type[<func2_name>], Type[<func3_name>]]`
+* Primitive types, e.g., `int`, `bool`, `str`, `float`, `Path`, and so on
+* Container types
+    - List `List[T]` 
+    - Homogeneous tuple, e.g., `Tuple[T, ...]`
+    - Heterogeneous tuple, e.g., `Tuple[T1, T2, T3]`
+    - Literal, e.g., `Literal[42, 1905]`
+* Nested types
+    - Function, e.g., `Type[<func_name>]`
+    - Union of functions, e.g., `Union[Type[<func1_name>], Type[<func2_name>], Type[<func3_name>]]`
 
 ## Usage
 
 ### Primitive Types
 
-The key idea of aku to generate `ArgumentParser` according to the type annotations of functions. For example, to register single function with only primitive types,
+The key idea of Aku to generate `ArgumentParser` according to the type annotations of functions. For example, to register a single function with only primitive types,
 
 ```python
 from pathlib import Path
@@ -55,7 +54,7 @@ def foo(a: int, b: bool = True, c: str = '3', d: float = 4.0, e: Path = Path.hom
 aku.run()
 ```
 
-`aku` will generate a `ArgumentParser` which provides your command line interface looks like below,
+Aku will generate an `ArgumentParser` which provides you command-line interface looks like below,
 
 ```shell script
 ~ python examples/foo.py --help 
@@ -70,7 +69,7 @@ optional arguments:
   --e path    e (default: /Users/home)
 ```
 
-Of course you can achieve the same functions by instantiating an `ArgumentParser`, but `aku` certainly makes such steps simple and efficient.
+Of course, you can achieve the same function by instantiating an `ArgumentParser`, but Aku certainly makes such steps simple and efficient.
 
 ```python
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, SUPPRESS
@@ -163,9 +162,9 @@ if __name__ == '__main__':
     aku.run()
 ```
 
-* argument `a` is annotated with `List[int]`, thus every `--a` appends one item at the end of existing list
-* homogenous tuple holds arbitrary number of elements with the same type, while heterogeneous tuple holds specialized number of elements with specialized type
-* literal arguments can be assigned value from the specified ones
+* Argument `a` is annotated with `List[int]`, thus every `--a` appends one item at the end of the existing list
+* Homogenous tuple holds an arbitrary number of elements with the same type, while heterogeneous tuple holds a specialized number of elements with a specialized type
+* Literal arguments can be assigned value from the specified ones
 
 ```shell script
 ~  python examples/baz.py --help                                                      
@@ -203,7 +202,7 @@ baz.py: error: argument --d: invalid choice: 43 (choose from 42, 1905)
 
 ### Nested Types
 
-Wrap your function in `Type` and then this can be passed as a higher-order type to annotations, then `aku` can recursively analysis them. For `Union` type, you can choose which type to run at command line interface. To avoid name conflicting, you can open a sub-namespace by adding a underline to your argument name.
+Wrap your function in `Type` and then this can be passed as a higher-order type to annotations, then Aku can recursively analyze them. For the `Union` type, you can choose which type to run in the terminal. To avoid name conflicting, you can open a sub-namespace by adding an underline to your argument name.
 
 ```python
 from typing import Type, Union
