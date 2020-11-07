@@ -86,6 +86,14 @@ def tp_bool(arg_strings: str) -> bool:
     raise ValueError
 
 
+def foo(a: int, b: bool = True, c: str = '3', d: float = 4.0, e: Path = Path.home()):
+    print(f'a => {a}')
+    print(f'b => {b}')
+    print(f'c => {c}')
+    print(f'd => {d}')
+    print(f'e => {e}')
+
+
 argument_parser = ArgumentParser(
     formatter_class=ArgumentDefaultsHelpFormatter,
 )
@@ -95,9 +103,8 @@ argument_parser.add_argument('--c', type=str, metavar='str', default='3', help='
 argument_parser.add_argument('--d', type=float, metavar='float', default=4.0, help='d')
 argument_parser.add_argument('--e', type=Path, metavar='path', default=Path.home(), help='e')
 
-args = argument_parser.parse_args().__dict__
-for key, value in args.items():
-    print(f'{key} => {value}')
+args = argument_parser.parse_args()
+foo(a=args.a, b=args.b, c=args.c, d=args.d, e=args.e)
 ```
 
 Moreover, if you register more than one functions, e.g., register function `add`,
