@@ -40,7 +40,11 @@ def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser
         nonlocal tps
 
         tps = [argument_parser._registry_get('type', tp, tp) for tp in tps]
-        return tuple(tp(arg) for tp, arg in zip(tps, re.split(pattern, arg_strings.strip())))
+        args = re.split(pattern, arg_strings.strip())
+
+        if len(tps) != len(args):
+            raise ValueError(f'the number of arguments does not match, {len(tps)} != {len(args)}')
+        return tuple(tp(arg) for tp, arg in zip(tps, args))
 
     return register_type(fn, argument_parser)
 
