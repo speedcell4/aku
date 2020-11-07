@@ -182,7 +182,7 @@ class AkuUnion(AkuTp):
 
         class UnionAction(Action):
             def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string=None):
-                setattr(namespace, self.dest, choices[values])
+                setattr(namespace, self.dest, (choices[values], values))
                 self.required = False
 
                 num_actions = len(parser._actions)
