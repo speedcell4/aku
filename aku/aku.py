@@ -90,8 +90,7 @@ class Aku(ArgumentParser):
                 curry_co = curry_co.setdefault(name, {})
                 literal_co = literal_co.setdefault(name, {})
             if key == AKU_FN:
-                curry_co[key] = value[0]
-                literal_co[key] = value[1]
+                curry_co[key], literal_co[key] = value
             else:
                 curry_co[key] = literal_co[key] = value
 
@@ -112,4 +111,4 @@ class Aku(ArgumentParser):
             if inspect.getfullargspec(fn).varkw is None:
                 return fn()
             else:
-                return fn(**{AKU: curry})
+                return fn(**{AKU: literal})
