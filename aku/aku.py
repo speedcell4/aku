@@ -1,7 +1,8 @@
 import functools
 import inspect
+import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, SUPPRESS
-from typing import Type, Union
+from typing import Type
 
 from aku.tp import AkuTp
 from aku.utils import _init_argument_parser, NEW_ACTIONS
@@ -34,21 +35,39 @@ class Aku(ArgumentParser):
         self._functions = []
 
     def option(self, fn):
-        self._functions.append(Type[fn])
+        self._functions.append(fn)
         return fn
 
-    def parse_args(self, args=None) -> Namespace:
-        AkuTp[Union[tuple(self._functions)]].add_argument(
-            argument_parser=self, name='root', default=SUPPRESS,
+    @staticmethod
+    def _add_root_function(argument_parser, fn):
+        AkuTp[Type[fn]].add_argument(
+            argument_parser=argument_parser, name='@root', default=SUPPRESS,
             prefixes=(), domain=(),
         )
+        return Namespace(**{'@root.@fn': fn})
 
-        namespace, args = None, None
+    def parse_args(self, args=None) -> Namespace:
+        assert len(self._functions) > 0
+
+        namespace, args, argument_parser = None, sys.argv, self
+        if len(self._functions) == 1:
+            fn = self._functions[0]
+            namespace = self._add_root_function(argument_parser, fn)
+        else:
+            subparsers = self.add_subparsers()
+            functions = {
+                fn.__name__: (fn, subparsers.add_parser(name=fn.__name__))
+                for fn in self._functions
+            }
+            if len(args) > 1 and args[1] in functions:
+                fn, argument_parser = functions[args[1]]
+                namespace = self._add_root_function(argument_parser, fn)
+
         while True:
-            namespace, args = self.parse_known_args(args=args, namespace=namespace)
-            if hasattr(self, NEW_ACTIONS):
-                self._actions = self._actions + getattr(self, NEW_ACTIONS)
-                delattr(self, NEW_ACTIONS)
+            namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
+            if hasattr(argument_parser, NEW_ACTIONS):
+                argument_parser._actions = argument_parser._actions + getattr(argument_parser, NEW_ACTIONS)
+                delattr(argument_parser, NEW_ACTIONS)
             else:
                 break
 
@@ -85,6 +104,7 @@ class Aku(ArgumentParser):
                 return x
 
         ret = recur(args)
+        print(f'ret => {ret}')
         assert len(ret) == 1
         for _, fn in ret.items():
             if inspect.getfullargspec(fn).varkw is None:
