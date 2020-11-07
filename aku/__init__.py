@@ -1,3 +1,8 @@
-from .aku import Aku, App
+from __future__ import annotations
 
-__version__ = '0.2.1'
+from aku.aku import Aku
+from aku.compat import Literal, get_origin, get_args
+
+__all__ = [
+    'Aku', 'Literal', 'get_origin', 'get_args',
+]

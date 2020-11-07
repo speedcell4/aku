@@ -1,26 +1,23 @@
 from setuptools import setup, find_packages
 
-with open('README.md', 'r', encoding='utf-8') as fp:
-    long_description = fp.read()
+name = 'aku'
 
 setup(
-    name='aku',
-    description='Annotation-driven ArgumentParser Generator',
-    long_description=long_description,
-    version=open('VERSION', mode='r').read(),
-    packages=find_packages(),
-    classifiers=[
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3 :: Only',
-        'Development Status :: 2 - Pre-Alpha',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Unix',
-        'Topic :: Utilities',
-    ],
+    name=name,
+    description='An interactive annotation-driven ArgumentParser generator',
+    version='0.2.0',
+    packages=[package for package in find_packages() if package.startswith(name)],
     url='https://github.com/speedcell4/aku',
     license='MIT',
-    author='Izen',
+    author='speedcell4',
     author_email='speedcell4@gmail.com',
     python_requires='>=3.7',
+    install_requires=[
+    ],
+    extras_require={
+        'dev': [
+            'pytest',
+            'hypothesis',
+        ],
+    }
 )
