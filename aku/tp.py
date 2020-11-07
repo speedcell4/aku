@@ -198,5 +198,5 @@ class AkuUnion(AkuTp):
         argument_parser.add_argument(
             f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
             type=self.tp, choices=tuple(choices.keys()), required=True, default=SUPPRESS,
-            action=UnionAction, metavar=f'{{{", ".join(choices.keys())}}}[fn]'
+            action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
         )
