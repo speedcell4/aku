@@ -16,6 +16,16 @@ An interactive annotation-driven `ArgumentParser` generator
 python -m pip install aku --upgrade
 ```
 
+## Type Annotations
+
+* primitive types, e.g., `int`, `bool`, `str`, `float`, `Path`, etc.
+* list `List[T]` 
+* homogeneous tuple, e.g., `Tuple[T, ...]`
+* heterogeneous tuple, e.g., `Tuple[T1, T2, T3]`
+* literal, e.g., `Literal[42, 1905]`
+* function, e.g., `Type[<func_name>]`
+* union of functions, e.g., `Union[Type[<func1_name>], Type[<func2_name>], Type[<func3_name>]]`
+
 ## Usage
 
 The key idea of aku to generate `ArgumentParser` according to the type annotations of functions. For example, to register single function with only primitive types, i.e., `int`, `bool`, `str`, `float`, `Path`, etc.
