@@ -65,15 +65,12 @@ class Aku(ArgumentParser):
 
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
-            print(f'namespace => {namespace}')
-            print(f'args => {args}')
             if hasattr(argument_parser, NEW_ACTIONS):
                 argument_parser._actions = argument_parser._actions + getattr(argument_parser, NEW_ACTIONS)
                 delattr(argument_parser, NEW_ACTIONS)
             else:
                 break
 
-        print(f'namespace => {namespace}')
         return namespace
 
     def run(self, namespace: Namespace = None):
@@ -96,26 +93,18 @@ class Aku(ArgumentParser):
             else:
                 curry_co[key] = literal_co[key] = value
 
-        print(f'curry => {curry}')
-        print(f'literal => {literal}')
-
-        def recur(x):
-            if isinstance(x, dict):
-                if '@fn' in x:
-                    fn = x.pop('@fn')
-                    kwargs = {key: recur(value) for key, value in x.items()}
-                    return functools.partial(fn, **kwargs)
+        def recur(item):
+            if isinstance(item, dict):
+                if '@fn' in item:
+                    func = item.pop('@fn')
+                    kwargs = {k: recur(v) for k, v in item.items()}
+                    return functools.partial(func, **kwargs)
                 else:
-                    return {
-                        key: recur(value)
-                        for key, value in x.items()
-                    }
+                    return {k: recur(v) for k, v in item.items()}
             else:
-                return x
+                return item
 
-        print(curry)
         ret = recur(curry)
-        print(f'ret => {ret}')
         assert len(ret) == 1
         for _, fn in ret.items():
             if inspect.getfullargspec(fn).varkw is None:
