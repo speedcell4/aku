@@ -3,7 +3,7 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, NEW_ACTIONS
+from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, NEW_ACTIONS, AKU_FN
 
 
 class AkuTp(object):
@@ -151,7 +151,7 @@ class AkuFn(AkuTp):
             if name.endswith('_'):
                 prefixes = prefixes + (name[:-1],)
 
-        argument_parser.set_defaults(**{join_dests(domain, f'@fn'): (self.tp, name)})
+        argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})
         for arg, tp, df in tp_iter(self.tp):
             tp = AkuTp[tp]
             tp.add_argument(
@@ -196,7 +196,7 @@ class AkuUnion(AkuTp):
 
         prefixes_name = join_names(prefixes, name)
         argument_parser.add_argument(
-            f'--{prefixes_name}', dest=join_dests(domain + (name,), '@fn'), help=prefixes_name,
+            f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
             type=self.tp, choices=tuple(choices.keys()), required=True, default=SUPPRESS,
             action=UnionAction, metavar=f'{{{", ".join(choices.keys())}}}[fn]'
         )

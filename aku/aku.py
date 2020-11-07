@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import _init_argument_parser, NEW_ACTIONS, fetch_name
+from aku.utils import _init_argument_parser, NEW_ACTIONS, fetch_name, AKU, AKU_FN, AKU_ROOT
 
 
 class Aku(ArgumentParser):
@@ -45,7 +45,7 @@ class Aku(ArgumentParser):
         if len(self._functions) == 1:
             fn = self._functions[0]
             AkuTp[Type[fn]].add_argument(
-                argument_parser=argument_parser, name='@root', default=SUPPRESS,
+                argument_parser=argument_parser, name=AKU_ROOT, default=SUPPRESS,
                 prefixes=(), domain=(),
             )
         else:
@@ -61,7 +61,7 @@ class Aku(ArgumentParser):
             if len(args) > 1 and args[1] in functions:
                 fn, argument_parser = functions[args[1]]
                 AkuTp[Type[fn]].add_argument(
-                    argument_parser=argument_parser, name='@root', default=SUPPRESS,
+                    argument_parser=argument_parser, name=AKU_ROOT, default=SUPPRESS,
                     prefixes=(), domain=(),
                 )
 
@@ -89,7 +89,7 @@ class Aku(ArgumentParser):
             for name in names:
                 curry_co = curry_co.setdefault(name, {})
                 literal_co = literal_co.setdefault(name, {})
-            if key == '@fn':
+            if key == AKU_FN:
                 curry_co[key] = value[0]
                 literal_co[key] = value[1]
             else:
@@ -97,8 +97,8 @@ class Aku(ArgumentParser):
 
         def recur(item):
             if isinstance(item, dict):
-                if '@fn' in item:
-                    func = item.pop('@fn')
+                if AKU_FN in item:
+                    func = item.pop(AKU_FN)
                     kwargs = {k: recur(v) for k, v in item.items()}
                     return functools.partial(func, **kwargs)
                 else:
@@ -112,4 +112,4 @@ class Aku(ArgumentParser):
             if inspect.getfullargspec(fn).varkw is None:
                 return fn()
             else:
-                return fn(**{'@aku': curry})
+                return fn(**{AKU: curry})
