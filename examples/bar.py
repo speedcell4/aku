@@ -14,4 +14,9 @@ def foo(a: int, b: bool = True, c: str = '3', d: float = 4.0, e: Path = Path.hom
     print(f'e => {e}')
 
 
+@aku.option
+def add(x: int, y: int):
+    print(f'{x} + {y} => {x + y}')
+
+
 aku.run()
