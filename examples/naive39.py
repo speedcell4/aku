@@ -28,7 +28,7 @@ def bar(x: Literal[1, 2, 3] = 2, y: list[int] = [2, 3, 4],
 
 
 @aku.option
-def delay(call: type[foo]):
+def delegate(call: type[foo]):
     call()
 
 

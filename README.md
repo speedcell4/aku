@@ -131,7 +131,7 @@ optional arguments:
 1 + 2 => 3
 ```
 
-### Nested Types
+### Container Types
 
 ```python
 from typing import List, Tuple
@@ -158,6 +158,16 @@ if __name__ == '__main__':
 * literal arguments can be assigned value from the specified ones
 
 ```shell script
+~  python examples/baz.py --help                                                      
+usage: baz.py [-h] --a [int] --b bool, ...) --c (int, bool, str --d int{1905, 42}
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --a [int]             a
+  --b (bool, ...)       b
+  --c (int, bool, str)  c
+  --d int{1905, 42}     d
+
 ~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,true,false,false,true" --c 42,true,"yes" --d 42
 a => [1, 2, 3]
 b => (True, True, False, False, True)
@@ -179,4 +189,79 @@ baz.py: error: argument --c: invalid fn value: '42,true,yes,43'
 ~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,true,false,false,true" --c 42,true,"yes" --d 43
 usage: baz.py [-h] [--a [int]] [--b bool, ...)] [--c (int, bool, str] --d int{1905, 42}
 baz.py: error: argument --d: invalid choice: 43 (choose from 42, 1905)
+```
+
+### Nested Types
+
+Wrap your function in `Type` and then this can be passed as a higher-order type to annotations, then `aku` can recursively analysis them. For `Union` type, you can choose which type to run at command line interface. To avoid name conflicting, you can open a sub-namespace by adding a underline to your argument name.
+
+```python
+from typing import Type, Union
+from aku import Aku
+
+
+def add(x: int, y: int):
+    print(f'{x} + {y} => {x + y}')
+
+
+def sub(x: int, y: int):
+    print(f'{x} - {y} => {x - y}')
+
+
+aku = Aku()
+
+
+@aku.option
+def one(op: Union[Type[add], Type[sub]]):
+    op()
+
+
+@aku.option
+def both(lhs_: Type[add], rhs_: Type[sub]):
+    lhs_()
+    rhs_()
+
+
+if __name__ == '__main__':
+    aku.run()
+```
+
+```shell script
+~ python examples/qux.py one --op add --help 
+usage: qux.py one [-h] [--op {add, sub}[fn]]
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --op {add, sub}[fn]  op (default: (<function add at 0x7fc1bc223700>, 'op'))
+  --x int              x
+  --y int              y
+
+~ python examples/qux.py one --op add --x 1 --y 2
+1 + 2 => 3
+
+~ python examples/qux.py one --op sub --help     
+usage: qux.py one [-h] [--op {add, sub}[fn]]
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --op {add, sub}[fn]  op (default: (<function sub at 0x7ff968a2db80>, 'op'))
+  --x int              x
+  --y int              y
+
+~ python examples/qux.py one --op sub --x 1 --y 2
+1 - 2 => -1
+
+~ python examples/qux.py both --help             
+usage: qux.py both [-h] --lhs-x int --lhs-y int --rhs-x int --rhs-y int
+
+optional arguments:
+  -h, --help   show this help message and exit
+  --lhs-x int  lhs-x
+  --lhs-y int  lhs-y
+  --rhs-x int  rhs-x
+  --rhs-y int  rhs-y
+
+~ python examples/qux.py both --lhs-x 1 --lhs-y 2 --rhs-x 3 --rhs-y 4
+1 + 2 => 3
+3 - 4 => -1
 ```
