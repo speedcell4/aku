@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Literal
+from typing import Union
 
-from aku import Aku
+from aku import Aku, Literal
 
 aku = Aku()
 
@@ -12,7 +12,8 @@ def foo(x: int, y: str = '4', z: bool = True, w: Path = Path.home(), **kwargs):
     print(f'{foo.__name__}.y => {y}')
     print(f'{foo.__name__}.z => {z}')
     print(f'{foo.__name__}.w => {w}')
-    print(f'{foo.__name__}.@aku => {kwargs["@aku"]}')
+    if '@aku' in kwargs:
+        print(f'{foo.__name__}.@aku => {kwargs["@aku"]}')
 
 
 @aku.option
@@ -22,7 +23,41 @@ def bar(x: Literal[1, 2, 3] = 2, y: list[int] = [2, 3, 4],
     print(f'{bar.__name__}.y => {y}')
     print(f'{bar.__name__}.z => {z}')
     print(f'{bar.__name__}.w => {w}')
-    print(f'{bar.__name__}.@aku => {kwargs["@aku"]}')
+    if '@aku' in kwargs:
+        print(f'{bar.__name__}.@aku => {kwargs["@aku"]}')
 
+
+@aku.option
+def delay(call: type[foo]):
+    call()
+
+
+@aku.option
+def one(call: Union[type[foo], type[bar]]):
+    call()
+
+
+@aku.option
+def both(a_: type[foo], b_: type[bar]):
+    a_()
+    b_()
+
+
+class A(object):
+    @classmethod
+    def baz(cls, x: int):
+        print(f'{A.__name__}.x => {x}')
+
+
+aku.option(A.baz)
+
+
+class B(object):
+    @classmethod
+    def baz(cls, x: int):
+        print(f'{B.__name__}.x => {x}')
+
+
+aku.option(B.baz)
 
 print(aku.run())

@@ -28,13 +28,19 @@ def bar(x: Literal[1, 2, 3] = 2, y: List[int] = [2, 3, 4],
 
 
 @aku.option
-def delay(work: Type[foo]):
-    work()
+def delay(call: Type[foo]):
+    call()
 
 
 @aku.option
-def both(work: Union[Type[foo], Type[bar]]):
-    work()
+def one(call: Union[Type[foo], Type[bar]]):
+    call()
+
+
+@aku.option
+def both(a_: Type[foo], b_: Type[bar]):
+    a_()
+    b_()
 
 
 class A(object):
