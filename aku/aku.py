@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import _init_argument_parser, NEW_ACTIONS, fetch_name, AKU, AKU_FN, AKU_ROOT
+from aku.utils import _init_argument_parser, fetch_name, AKU, AKU_FN, AKU_ROOT
 
 
 class Aku(ArgumentParser):
@@ -65,14 +65,14 @@ class Aku(ArgumentParser):
                     prefixes=(), domain=(),
                 )
 
+        num_actions = len(argument_parser._actions)
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
-            if hasattr(argument_parser, NEW_ACTIONS):
-                argument_parser._actions = argument_parser._actions + getattr(argument_parser, NEW_ACTIONS)
-                delattr(argument_parser, NEW_ACTIONS)
-            else:
+            if num_actions == len(argument_parser._actions):
                 break
+            num_actions = len(argument_parser._actions)
 
+        namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
         return namespace
 
     def run(self, namespace: Namespace = None):

@@ -3,7 +3,7 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, NEW_ACTIONS, AKU_FN
+from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, AKU_FN
 
 
 class AkuTp(object):
@@ -90,14 +90,7 @@ class AkuHomoTuple(AkuTp):
 
 
 class AkuHeteroTuple(AkuTp):
-    def __class_getitem__(cls, tp):
-        tp, origin, args = tp
-        if origin is tuple:
-            if len(args) == 2 and args[1] is ...:
-                return AkuHomoTuple(args[0], None)
-            else:
-                return AkuHeteroTuple(args, None)
-        raise TypeError
+    __class_getitem__ = AkuHomoTuple.__class_getitem__
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
@@ -141,6 +134,12 @@ class AkuFn(AkuTp):
                     return AkuUnion(str, get_args(args[0]))
                 else:
                     return AkuFn(args[0], None)
+        elif origin is Union:
+            args = [
+                get_args(arg)[0]
+                for arg in get_args(tp)
+            ]
+            return AkuUnion(str, args)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
@@ -161,21 +160,7 @@ class AkuFn(AkuTp):
 
 
 class AkuUnion(AkuTp):
-    def __class_getitem__(cls, tp):
-        tp, origin, args = tp
-        if origin is type:
-            if len(args) == 1:
-                if get_origin(args[0]) == Union:
-                    return AkuUnion(str, get_args(args[0]))
-                else:
-                    return AkuFn(args[0], None)
-        elif origin is Union:
-            args = [
-                get_args(arg)[0]
-                for arg in get_args(tp)
-            ]
-            return AkuUnion(str, args)
-        raise TypeError
+    __class_getitem__ = AkuFn.__class_getitem__
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
@@ -186,13 +171,10 @@ class AkuUnion(AkuTp):
                 setattr(namespace, self.dest, (choices[values], values))
                 self.required = False
 
-                num_actions = len(parser._actions)
                 AkuFn(choices[values], None).add_argument(
                     argument_parser=parser, name=name,
                     prefixes=prefixes, domain=domain, default=None,
                 )
-                parser._actions, new_actions = parser._actions[:num_actions], parser._actions[num_actions:]
-                setattr(parser, NEW_ACTIONS, getattr(parser, NEW_ACTIONS, []) + new_actions)
 
         prefixes_name = join_names(prefixes, name)
         argument_parser.add_argument(
