@@ -94,20 +94,41 @@ class Aku(ArgumentParser):
             else:
                 curry_co[key] = literal_co[key] = value
 
-        def recur(item):
+        def recur_curry(item):
             if isinstance(item, dict):
                 if AKU_FN in item:
                     func = item.pop(AKU_FN)
-                    kwargs = {k: recur(v) for k, v in item.items()}
+                    kwargs = {k: recur_curry(v) for k, v in item.items()}
                     return functools.partial(func, **kwargs)
                 else:
-                    return {k: recur(v) for k, v in item.items()}
+                    return {k: recur_curry(v) for k, v in item.items()}
             else:
                 return item
 
-        ret = recur(curry)
-        assert len(ret) == 1
-        for _, fn in ret.items():
+        def flatten_literal(item):
+            keys, values = [], []
+
+            def recur(k, v):
+                nonlocal keys, values
+
+                if isinstance(v, dict):
+                    for x, y in v.items():
+                        recur(k + (x,), y)
+                else:
+                    keys.append(k)
+                    values.append(v)
+
+            recur((), item)
+            return {
+                '-'.join([x[:-1] for x in k[1:-1] if x.endswith('_')] + [k[-1]]): v
+                for k, v in zip(keys, values)
+            }
+
+        curry = recur_curry(curry)
+        literal = flatten_literal(literal)
+
+        assert len(curry) == 1
+        for _, fn in curry.items():
             if inspect.getfullargspec(fn).varkw is None:
                 return fn()
             else:
