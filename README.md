@@ -175,7 +175,7 @@ optional arguments:
   --a [int]             a
   --b (bool, ...)       b
   --c (int, bool, str)  c
-  --d int{1905, 42}     d
+  --d int{1905, 42}   d
 
 ~ python examples/baz.py --a 1 --a 2 --a 3 --b "true,false,false,true" --c 42,true,"yes" --d 42
 a => [1, 2, 3]
@@ -221,11 +221,11 @@ if __name__ == '__main__':
 
 ```shell script
 ~ python examples/qux.py one --op add --help 
-usage: qux.py one [-h] [--op {add, sub}[fn]]
+usage: qux.py one [-h] [--op fn{add, sub}]
 
 optional arguments:
   -h, --help           show this help message and exit
-  --op {add, sub}[fn]  op (default: (<function add at 0x7fc1bc223700>, 'op'))
+  --op fn{add, sub}  op (default: (<function add at 0x7fc1bc223700>, 'op'))
   --x int              x
   --y int              y
 
@@ -233,11 +233,11 @@ optional arguments:
 1 + 2 => 3
 
 ~ python examples/qux.py one --op sub --help     
-usage: qux.py one [-h] [--op {add, sub}[fn]]
+usage: qux.py one [-h] [--op fn{add, sub}]
 
 optional arguments:
   -h, --help           show this help message and exit
-  --op {add, sub}[fn]  op (default: (<function sub at 0x7ff968a2db80>, 'op'))
+  --op fn{add, sub}  op (default: (<function sub at 0x7ff968a2db80>, 'op'))
   --x int              x
   --y int              y
 

@@ -3,7 +3,7 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, NEW_ACTIONS, AKU_FN
+from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, AKU_FN
 
 
 class AkuTp(object):
@@ -90,14 +90,7 @@ class AkuHomoTuple(AkuTp):
 
 
 class AkuHeteroTuple(AkuTp):
-    def __class_getitem__(cls, tp):
-        tp, origin, args = tp
-        if origin is tuple:
-            if len(args) == 2 and args[1] is ...:
-                return AkuHomoTuple(args[0], None)
-            else:
-                return AkuHeteroTuple(args, None)
-        raise TypeError
+    __class_getitem__ = AkuHomoTuple.__class_getitem__
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
@@ -141,34 +134,6 @@ class AkuFn(AkuTp):
                     return AkuUnion(str, get_args(args[0]))
                 else:
                     return AkuFn(args[0], None)
-        raise TypeError
-
-    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
-                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
-
-        if name is not None:
-            domain = domain + (name,)
-            if name.endswith('_'):
-                prefixes = prefixes + (name[:-1],)
-
-        argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})
-        for arg, tp, df in tp_iter(self.tp):
-            tp = AkuTp[tp]
-            tp.add_argument(
-                argument_parser=argument_parser, name=arg,
-                prefixes=prefixes, domain=domain, default=df,
-            )
-
-
-class AkuUnion(AkuTp):
-    def __class_getitem__(cls, tp):
-        tp, origin, args = tp
-        if origin is type:
-            if len(args) == 1:
-                if get_origin(args[0]) == Union:
-                    return AkuUnion(str, get_args(args[0]))
-                else:
-                    return AkuFn(args[0], None)
         elif origin is Union:
             args = [
                 get_args(arg)[0]
@@ -179,6 +144,28 @@ class AkuUnion(AkuTp):
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
                      prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
+
+        if name is not None:
+            domain = domain + (name,)
+            if name.endswith('_'):
+                prefixes = prefixes + (name[:-1],)
+
+        argument_parser._done = False
+        argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})
+
+        for arg, tp, df in tp_iter(self.tp):
+            tp = AkuTp[tp]
+            tp.add_argument(
+                argument_parser=argument_parser, name=arg,
+                prefixes=prefixes, domain=domain, default=df,
+            )
+
+
+class AkuUnion(AkuTp):
+    __class_getitem__ = AkuFn.__class_getitem__
+
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
         choices = {c.__name__: c for c in self.choices}
 
         class UnionAction(Action):
@@ -186,17 +173,18 @@ class AkuUnion(AkuTp):
                 setattr(namespace, self.dest, (choices[values], values))
                 self.required = False
 
-                num_actions = len(parser._actions)
+                num_actions = len(argument_parser._actions)
+
                 AkuFn(choices[values], None).add_argument(
                     argument_parser=parser, name=name,
                     prefixes=prefixes, domain=domain, default=None,
                 )
-                parser._actions, new_actions = parser._actions[:num_actions], parser._actions[num_actions:]
-                setattr(parser, NEW_ACTIONS, getattr(parser, NEW_ACTIONS, []) + new_actions)
+
+                del argument_parser._actions[num_actions:]
 
         prefixes_name = join_names(prefixes, name)
         argument_parser.add_argument(
             f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
             type=self.tp, choices=tuple(choices.keys()), required=True, default=SUPPRESS,
-            action=UnionAction, metavar=f'{{{", ".join(choices.keys())}}}[fn]'
+            action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
         )

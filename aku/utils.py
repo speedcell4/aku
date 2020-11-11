@@ -3,8 +3,6 @@ import re
 from argparse import ArgumentParser, SUPPRESS
 from typing import get_type_hints, Pattern, Tuple
 
-NEW_ACTIONS = '_new_actions'
-
 AKU = '@aku'
 AKU_FN = '@fn'
 AKU_ROOT = '@root'

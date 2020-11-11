@@ -38,9 +38,11 @@ def one(call: Union[Type[foo], Type[bar]]):
 
 
 @aku.option
-def both(a_: Type[foo], b_: Type[bar]):
+def both(a_: Type[foo], b_: Type[bar], **kwargs):
     a_()
     b_()
+    if '@aku' in kwargs:
+        print(f'{both.__name__}.@aku => {kwargs["@aku"]}')
 
 
 class A(object):

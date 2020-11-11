@@ -14,11 +14,6 @@ aku = Aku()
 
 
 @aku.option
-def one(op: Union[Type[add], Type[sub]]):
-    op()
-
-
-@aku.option
 def both(lhs_: Type[add], rhs_: Type[sub]):
     lhs_()
     rhs_()

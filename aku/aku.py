@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import _init_argument_parser, NEW_ACTIONS, fetch_name, AKU, AKU_FN, AKU_ROOT
+from aku.utils import _init_argument_parser, fetch_name, AKU, AKU_FN, AKU_ROOT
 
 
 class Aku(ArgumentParser):
@@ -65,14 +65,17 @@ class Aku(ArgumentParser):
                     prefixes=(), domain=(),
                 )
 
+        argument_parser._done = True
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
-            if hasattr(argument_parser, NEW_ACTIONS):
-                argument_parser._actions = argument_parser._actions + getattr(argument_parser, NEW_ACTIONS)
-                delattr(argument_parser, NEW_ACTIONS)
+
+            if not argument_parser._done:
+                argument_parser._actions = list(argument_parser._option_string_actions.values())
+                argument_parser._done = True
             else:
                 break
 
+        namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
         return namespace
 
     def run(self, namespace: Namespace = None):
@@ -90,26 +93,46 @@ class Aku(ArgumentParser):
                 curry_co = curry_co.setdefault(name, {})
                 literal_co = literal_co.setdefault(name, {})
             if key == AKU_FN:
-                curry_co[key] = value[0]
-                literal_co[key] = value[1]
+                curry_co[key], literal_co[key] = value
             else:
                 curry_co[key] = literal_co[key] = value
 
-        def recur(item):
+        def recur_curry(item):
             if isinstance(item, dict):
                 if AKU_FN in item:
                     func = item.pop(AKU_FN)
-                    kwargs = {k: recur(v) for k, v in item.items()}
+                    kwargs = {k: recur_curry(v) for k, v in item.items()}
                     return functools.partial(func, **kwargs)
                 else:
-                    return {k: recur(v) for k, v in item.items()}
+                    return {k: recur_curry(v) for k, v in item.items()}
             else:
                 return item
 
-        ret = recur(curry)
-        assert len(ret) == 1
-        for _, fn in ret.items():
+        def flatten_literal(item):
+            keys, values = [], []
+
+            def recur(k, v):
+                nonlocal keys, values
+
+                if isinstance(v, dict):
+                    for x, y in v.items():
+                        recur(k + (x,), y)
+                else:
+                    keys.append(k)
+                    values.append(v)
+
+            recur((), item)
+            return {
+                '-'.join([x[:-1] for x in k[1:-1] if x.endswith('_')] + [k[-1]]): v
+                for k, v in zip(keys, values)
+            }
+
+        curry = recur_curry(curry)
+        literal = flatten_literal(literal)
+
+        assert len(curry) == 1
+        for _, fn in curry.items():
             if inspect.getfullargspec(fn).varkw is None:
                 return fn()
             else:
-                return fn(**{AKU: curry})
+                return fn(**{AKU: literal})
