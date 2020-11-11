@@ -150,7 +150,9 @@ class AkuFn(AkuTp):
             if name.endswith('_'):
                 prefixes = prefixes + (name[:-1],)
 
+        argument_parser._done = False
         argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})
+
         for arg, tp, df in tp_iter(self.tp):
             tp = AkuTp[tp]
             tp.add_argument(
@@ -171,10 +173,14 @@ class AkuUnion(AkuTp):
                 setattr(namespace, self.dest, (choices[values], values))
                 self.required = False
 
+                num_actions = len(argument_parser._actions)
+
                 AkuFn(choices[values], None).add_argument(
                     argument_parser=parser, name=name,
                     prefixes=prefixes, domain=domain, default=None,
                 )
+
+                del argument_parser._actions[num_actions:]
 
         prefixes_name = join_names(prefixes, name)
         argument_parser.add_argument(

@@ -65,12 +65,15 @@ class Aku(ArgumentParser):
                     prefixes=(), domain=(),
                 )
 
-        num_actions = len(argument_parser._actions)
+        argument_parser._done = True
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
-            if num_actions == len(argument_parser._actions):
+
+            if not argument_parser._done:
+                argument_parser._actions = list(argument_parser._option_string_actions.values())
+                argument_parser._done = True
+            else:
                 break
-            num_actions = len(argument_parser._actions)
 
         namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
         return namespace
