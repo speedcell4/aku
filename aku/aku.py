@@ -43,7 +43,7 @@ class Aku(ArgumentParser):
     def parse_aku(self, args=None) -> Namespace:
         assert len(self._functions) > 0
 
-        namespace, args, argument_parser = None, sys.argv, self
+        namespace, args, argument_parser = None, sys.argv[1:], self
         if len(self._functions) == 1:
             fn = self._functions[0]
             AkuTp[Type[fn]].add_argument(
@@ -52,7 +52,7 @@ class Aku(ArgumentParser):
                 prefixes=(), domain=(),
             )
         else:
-            subparsers = self.add_subparsers()
+            subparsers = argument_parser.add_subparsers()
             functions = {}
             for fn in self._functions:
                 name = fetch_name(fn)
@@ -61,8 +61,8 @@ class Aku(ArgumentParser):
                 else:
                     raise ValueError(f'{name} was already registered')
 
-            if len(args) > 1 and args[1] in functions:
-                _, arg, *args = args
+            if len(args) > 0 and args[0] in functions:
+                arg, *args = args
                 fn, argument_parser = functions[arg]
                 AkuTp[Type[fn]].add_argument(
                     argument_parser=argument_parser,
