@@ -40,14 +40,15 @@ class Aku(ArgumentParser):
         self._functions.append(fn)
         return fn
 
-    def aku_parse_args(self, args=None) -> Namespace:
+    def parse_aku(self, args=None) -> Namespace:
         assert len(self._functions) > 0
 
         namespace, args, argument_parser = None, sys.argv, self
         if len(self._functions) == 1:
             fn = self._functions[0]
             AkuTp[Type[fn]].add_argument(
-                argument_parser=argument_parser, name=AKU_ROOT, default=SUPPRESS,
+                argument_parser=argument_parser,
+                name=AKU_ROOT, default=SUPPRESS,
                 prefixes=(), domain=(),
             )
         else:
@@ -61,9 +62,11 @@ class Aku(ArgumentParser):
                     raise ValueError(f'{name} was already registered')
 
             if len(args) > 1 and args[1] in functions:
-                fn, argument_parser = functions[args[1]]
+                _, arg, *args = args
+                fn, argument_parser = functions[arg]
                 AkuTp[Type[fn]].add_argument(
-                    argument_parser=argument_parser, name=AKU_ROOT, default=SUPPRESS,
+                    argument_parser=argument_parser,
+                    name=AKU_ROOT, default=SUPPRESS,
                     prefixes=(), domain=(),
                 )
 
@@ -92,7 +95,7 @@ class Aku(ArgumentParser):
 
     def run(self, namespace: Namespace = None):
         if namespace is None:
-            namespace = self.aku_parse_args()
+            namespace = self.parse_aku()
         if isinstance(namespace, Namespace):
             namespace = namespace.__dict__
 

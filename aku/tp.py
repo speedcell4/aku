@@ -4,7 +4,8 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, AKU_FN
+from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, AKU_FN, \
+    get_action_group
 
 delay = []
 
@@ -153,10 +154,7 @@ class AkuFn(AkuTp):
         if name is not None:
             domain = domain + (name,)
             if name.endswith('_'):
-                _argument_parser = getattr(argument_parser, 'container', argument_parser)
-                argument_group = _argument_parser.add_argument_group(join_names(prefixes, name))
-                argument_group.container = argument_parser
-                argument_parser = argument_group
+                _, argument_parser = get_action_group(argument_parser, join_names(prefixes, name))
                 prefixes = prefixes + (name[:-1],)
 
         argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})

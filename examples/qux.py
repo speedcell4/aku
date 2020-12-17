@@ -3,11 +3,11 @@ from typing import Type, Union
 from aku import Aku
 
 
-def add(x: int, y: int):
+def add(x: int = 1, y: int = 2):
     print(f'{x} + {y} => {x + y}')
 
 
-def sub(x: int, y: int):
+def sub(x: int = 3, y: int = 4):
     print(f'{x} - {y} => {x - y}')
 
 
