@@ -4,6 +4,7 @@ import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, SUPPRESS
 from typing import Type
 
+from aku import tp as aku_tp
 from aku.tp import AkuTp
 from aku.utils import _init_argument_parser, fetch_name, AKU, AKU_FN, AKU_ROOT
 
@@ -28,17 +29,18 @@ class Aku(ArgumentParser):
             prog=prog, usage=usage, description=description, epilog=epilog,
             parents=parents, formatter_class=formatter_class, prefix_chars=prefix_chars,
             fromfile_prefix_chars=fromfile_prefix_chars, argument_default=argument_default,
-            conflict_handler=conflict_handler, add_help=add_help, allow_abbrev=allow_abbrev,
+            conflict_handler=conflict_handler, add_help=False, allow_abbrev=allow_abbrev,
         )
         _init_argument_parser(self)
 
         self._functions = []
+        self.add_help = add_help
 
     def option(self, fn):
         self._functions.append(fn)
         return fn
 
-    def parse_args(self, args=None) -> Namespace:
+    def aku_parse_args(self, args=None) -> Namespace:
         assert len(self._functions) > 0
 
         namespace, args, argument_parser = None, sys.argv, self
@@ -65,22 +67,32 @@ class Aku(ArgumentParser):
                     prefixes=(), domain=(),
                 )
 
-        argument_parser._done = True
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
 
-            if not argument_parser._done:
-                argument_parser._actions = list(argument_parser._option_string_actions.values())
-                argument_parser._done = True
-            else:
+            if len(aku_tp.delay) == 0:
                 break
+            else:
+                for delay in aku_tp.delay:
+                    delay()
+                aku_tp.delay = []
 
-        namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
-        return namespace
+        if self.add_help:
+            argument_parser.add_argument(
+                '--help', action='help', default=SUPPRESS,
+                help='show this help message and exit',
+            )
+        for action in argument_parser._actions:
+            if action.required is None:
+                action.required = True
+        return argument_parser.parse_args(args=args, namespace=namespace)
+
+    def error(self, message: str) -> None:
+        raise RuntimeError(message)
 
     def run(self, namespace: Namespace = None):
         if namespace is None:
-            namespace = self.parse_args()
+            namespace = self.aku_parse_args()
         if isinstance(namespace, Namespace):
             namespace = namespace.__dict__
 

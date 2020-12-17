@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Union
 
 from aku import Aku
 
@@ -15,9 +15,10 @@ aku = Aku()
 
 
 @aku.option
-def both(a_: Type[add], b_: Type[sub]):
+def both(a_: Type[add], b_: Type[sub], c_: Union[Type[add], Type[sub]]):
     a_()
     b_()
+    c_()
 
 
 @aku.option
