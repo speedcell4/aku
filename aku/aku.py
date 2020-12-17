@@ -33,38 +33,38 @@ class Aku(ArgumentParser):
         )
         _init_argument_parser(self)
 
-        self._functions = []
+        self.options = []
         self.add_help = add_help
 
     def option(self, fn):
-        self._functions.append(fn)
+        self.options.append(fn)
         return fn
 
     def parse_aku(self, args=None) -> Namespace:
-        assert len(self._functions) > 0
+        assert len(self.options) > 0
 
         namespace, args, argument_parser = None, sys.argv[1:], self
-        if len(self._functions) == 1:
-            fn = self._functions[0]
-            AkuTp[Type[fn]].add_argument(
+        if len(self.options) == 1:
+            option = self.options[0]
+            AkuTp[Type[option]].add_argument(
                 argument_parser=argument_parser,
                 name=AKU_ROOT, default=SUPPRESS,
                 prefixes=(), domain=(),
             )
         else:
             subparsers = argument_parser.add_subparsers()
-            functions = {}
-            for fn in self._functions:
-                name = fetch_name(fn)
-                if name not in functions:
-                    functions[name] = (fn, subparsers.add_parser(name=name))
+            options = {}
+            for option in self.options:
+                name = fetch_name(option)
+                if name not in options:
+                    options[name] = (option, subparsers.add_parser(name=name))
                 else:
                     raise ValueError(f'{name} was already registered')
 
-            if len(args) > 0 and args[0] in functions:
+            if len(args) > 0 and args[0] in options:
                 arg, *args = args
-                fn, argument_parser = functions[arg]
-                AkuTp[Type[fn]].add_argument(
+                option, argument_parser = options[arg]
+                AkuTp[Type[option]].add_argument(
                     argument_parser=argument_parser,
                     name=AKU_ROOT, default=SUPPRESS,
                     prefixes=(), domain=(),
