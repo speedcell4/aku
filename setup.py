@@ -5,7 +5,7 @@ name = 'aku'
 setup(
     name=name,
     description='An interactive annotation-driven ArgumentParser generator',
-    version='0.2.1',
+    version='0.2.2',
     packages=[package for package in find_packages() if package.startswith(name)],
     url='https://github.com/speedcell4/aku',
     license='MIT',
