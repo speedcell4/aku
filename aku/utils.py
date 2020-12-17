@@ -95,3 +95,15 @@ def join_names(prefixes: Tuple[str, ...], name: str) -> str:
 
 def join_dests(domain: Tuple[str, ...], name: str) -> str:
     return '.'.join(domain + (name,)).lower()
+
+
+def get_action_group(argument_parser: ArgumentParser, title: str):
+    argument_parser = getattr(argument_parser, 'container', argument_parser)
+
+    for action_group in argument_parser._action_groups:
+        if action_group.title == title:
+            return action_group
+
+    action_group = argument_parser.add_argument_group(title=title)
+    action_group.container = argument_parser
+    return argument_parser, action_group
