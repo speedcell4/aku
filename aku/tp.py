@@ -148,6 +148,7 @@ class AkuFn(AkuTp):
         if name is not None:
             domain = domain + (name,)
             if name.endswith('_'):
+                argument_parser = argument_parser.add_argument_group(join_names(prefixes, name))
                 prefixes = prefixes + (name[:-1],)
 
         argument_parser._done = False

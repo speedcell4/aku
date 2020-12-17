@@ -1,4 +1,5 @@
-from typing import Type, Union
+from typing import Type
+
 from aku import Aku
 
 
@@ -14,9 +15,14 @@ aku = Aku()
 
 
 @aku.option
-def both(lhs_: Type[add], rhs_: Type[sub]):
-    lhs_()
-    rhs_()
+def both(a_: Type[add], b_: Type[sub]):
+    a_()
+    b_()
+
+
+@aku.option
+def work(nice_: Type[both]):
+    nice_()
 
 
 if __name__ == '__main__':
