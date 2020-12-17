@@ -153,7 +153,10 @@ class AkuFn(AkuTp):
         if name is not None:
             domain = domain + (name,)
             if name.endswith('_'):
-                argument_parser = argument_parser.add_argument_group(join_names(prefixes, name))
+                _argument_parser = getattr(argument_parser, 'container', argument_parser)
+                argument_group = _argument_parser.add_argument_group(join_names(prefixes, name))
+                argument_group.container = argument_parser
+                argument_parser = argument_group
                 prefixes = prefixes + (name[:-1],)
 
         argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})

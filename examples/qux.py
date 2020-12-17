@@ -15,15 +15,15 @@ aku = Aku()
 
 
 @aku.option
-def both(a_: Type[add], b_: Type[sub], c_: Union[Type[add], Type[sub]]):
+def op(a_: Type[add], b_: Type[sub], c_: Union[Type[add], Type[sub]]):
     a_()
     b_()
     c_()
 
 
 @aku.option
-def work(nice_: Type[both]):
-    nice_()
+def nested(fn_: Union[Type[op], Type[add]]):
+    fn_()
 
 
 if __name__ == '__main__':
