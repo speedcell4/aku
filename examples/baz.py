@@ -6,7 +6,7 @@ aku = Aku()
 
 
 @aku.option
-def baz(a: List[int], b: Tuple[bool, ...], c: Tuple[int, bool, str], d: Literal[42, 1905]):
+def baz(a: List[int], b: Tuple[bool, ...], c: Tuple[int, bool, str], d: Literal[42, 1905] = 42):
     print(f'a => {a}')
     print(f'b => {b}')
     print(f'c => {c}')

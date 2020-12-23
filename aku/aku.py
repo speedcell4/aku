@@ -9,16 +9,24 @@ from aku.tp import AkuTp
 from aku.utils import _init_argument_parser, fetch_name, AKU, AKU_FN, AKU_ROOT
 
 
+class AkuFormatter(ArgumentDefaultsHelpFormatter):
+    def _format_actions_usage(self, actions, groups):
+        required_option_strings = [
+            action.option_strings[-1][2:]
+            for action in actions if action.required
+        ]
+        if len(required_option_strings) > 0:
+            return f'-- [{"|".join(required_option_strings)}]'
+        return ''
+
+
 class Aku(ArgumentParser):
     def __init__(self, prog=None,
                  usage=None,
                  description=None,
                  epilog=None,
                  parents=(),
-                 formatter_class=functools.partial(
-                     ArgumentDefaultsHelpFormatter,
-                     max_help_position=82,
-                 ),
+                 formatter_class=AkuFormatter,
                  prefix_chars='-',
                  fromfile_prefix_chars=None,
                  argument_default=None,
