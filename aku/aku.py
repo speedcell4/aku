@@ -51,7 +51,10 @@ class Aku(ArgumentParser):
     def parse_aku(self, args=None) -> Namespace:
         assert len(self.options) > 0
 
-        namespace, args, argument_parser = None, sys.argv[1:], self
+        if args is None:
+            args = sys.argv[1:]
+
+        namespace, argument_parser = None, self
         if len(self.options) == 1:
             option = self.options[0]
             AkuTp[Type[option]].add_argument(
