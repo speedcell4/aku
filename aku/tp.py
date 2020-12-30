@@ -7,8 +7,6 @@ from aku.compat import Literal, get_origin, get_args
 from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, AKU_FN, \
     get_action_group
 
-delay = []
-
 
 class AkuTp(object):
     def __init__(self, tp, choices):
@@ -178,6 +176,7 @@ class AkuUnion(AkuTp):
                 setattr(namespace, self.dest, (choices[values], values))
                 self.required = False
 
+                delay = parser._registries.get('delay')['@aku']
                 delay.append(functools.partial(
                     AkuFn(choices[values], None).add_argument,
                     argument_parser=parser, name=name,

@@ -4,9 +4,19 @@ import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, SUPPRESS
 from typing import Type
 
-from aku import tp as aku_tp
 from aku.tp import AkuTp
 from aku.utils import _init_argument_parser, fetch_name, AKU, AKU_FN, AKU_ROOT
+
+
+class AkuFormatter(ArgumentDefaultsHelpFormatter):
+    def _format_actions_usage(self, actions, groups):
+        required_option_strings = [
+            action.option_strings[-1][2:]
+            for action in actions if action.required
+        ]
+        if len(required_option_strings) > 0:
+            return f'-- [{"|".join(required_option_strings)}]'
+        return ''
 
 
 class Aku(ArgumentParser):
@@ -15,10 +25,7 @@ class Aku(ArgumentParser):
                  description=None,
                  epilog=None,
                  parents=(),
-                 formatter_class=functools.partial(
-                     ArgumentDefaultsHelpFormatter,
-                     max_help_position=82,
-                 ),
+                 formatter_class=AkuFormatter,
                  prefix_chars='-',
                  fromfile_prefix_chars=None,
                  argument_default=None,
@@ -43,7 +50,10 @@ class Aku(ArgumentParser):
     def parse_aku(self, args=None) -> Namespace:
         assert len(self.options) > 0
 
-        namespace, args, argument_parser = None, sys.argv[1:], self
+        if args is None:
+            args = sys.argv[1:]
+
+        namespace, argument_parser = None, self
         if len(self.options) == 1:
             option = self.options[0]
             AkuTp[Type[option]].add_argument(
@@ -73,12 +83,12 @@ class Aku(ArgumentParser):
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
 
-            if len(aku_tp.delay) == 0:
+            if len(argument_parser._registries['delay'][AKU]) == 0:
                 break
             else:
-                for delay in aku_tp.delay:
+                for delay in argument_parser._registries['delay'][AKU]:
                     delay()
-                aku_tp.delay = []
+                argument_parser._registries['delay'][AKU].clear()
 
         if self.add_help:
             argument_parser.add_argument(
