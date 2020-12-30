@@ -4,7 +4,6 @@ import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, SUPPRESS
 from typing import Type
 
-from aku import tp as aku_tp
 from aku.tp import AkuTp
 from aku.utils import _init_argument_parser, fetch_name, AKU, AKU_FN, AKU_ROOT
 
@@ -84,12 +83,12 @@ class Aku(ArgumentParser):
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
 
-            if len(aku_tp.delay) == 0:
+            if len(argument_parser._registries['delay'][AKU]) == 0:
                 break
             else:
-                for delay in aku_tp.delay:
+                for delay in argument_parser._registries['delay'][AKU]:
                     delay()
-                aku_tp.delay = []
+                argument_parser._registries['delay'][AKU].clear()
 
         if self.add_help:
             argument_parser.add_argument(

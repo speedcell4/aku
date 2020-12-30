@@ -53,6 +53,7 @@ def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser
 
 def _init_argument_parser(argument_parser: ArgumentParser):
     register_type(tp_bool, argument_parser)
+    argument_parser.register('delay', AKU, [])
 
 
 def tp_iter(fn):
