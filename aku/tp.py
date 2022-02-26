@@ -4,7 +4,7 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, AKU_FN, \
+from aku.utils import register_homo_tuple, register_hetero_tuple, iter_annotations, join_names, join_dests, AKU_FN, \
     get_action_group
 
 
@@ -157,7 +157,7 @@ class AkuFn(AkuTp):
 
         argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})
 
-        for arg, tp, df in tp_iter(self.tp):
+        for arg, tp, df in iter_annotations(self.tp):
             AkuTp[tp].add_argument(
                 argument_parser=argument_parser, name=arg,
                 prefixes=prefixes, domain=domain, default=df,

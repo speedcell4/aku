@@ -1,6 +1,7 @@
 import inspect
 import re
 from argparse import ArgumentParser, SUPPRESS
+from inspect import Parameter
 from typing import get_type_hints, Pattern, Tuple
 
 AKU = '@aku'
@@ -56,36 +57,17 @@ def _init_argument_parser(argument_parser: ArgumentParser):
     argument_parser.register('delay', AKU, [])
 
 
-def tp_iter(fn):
-    is_method = inspect.ismethod(fn)
-    if inspect.isclass(fn):
-        fn = fn.__init__
-        is_method = True
-
-    tps = get_type_hints(fn)
-    spec = inspect.getfullargspec(fn)
-    args = spec.args or []
-    defaults = spec.defaults or []
-    defaults = {a: d for a, d in zip(args[::-1], defaults[::-1])}
-
-    for index, arg in enumerate(args[1:] if is_method else args):
-        yield arg, tps[arg], defaults.get(arg, SUPPRESS)
+def iter_annotations(tp):
+    for name, param in inspect.signature(tp).parameters.items():  # type: (str, Parameter)
+        if param.kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.POSITIONAL_ONLY):
+            if param.default == Parameter.empty:
+                yield name, param.annotation, SUPPRESS
+            else:
+                yield name, param.annotation, param.default
 
 
-def fetch_name(fn) -> str:
-    if inspect.isfunction(fn):  # function, static method
-        return fn.__name__
-    if inspect.isclass(fn):  # class
-        return fn.__name__.lower()
-    if inspect.ismethod(fn):  # class method
-        __class__ = fn.__self__
-        if not inspect.isclass(__class__):
-            __class__ = __class__.__class__
-
-        return f'{__class__.__name__.lower()}.{fn.__name__}'
-    if callable(fn):  # __call__
-        return f'{fn.__class__.__name__.lower()}'
-    raise NotImplementedError
+def fetch_name(tp) -> str:
+    return tp.__qualname__.lower()
 
 
 def join_names(prefixes: Tuple[str, ...], name: str) -> str:
