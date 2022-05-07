@@ -25,9 +25,9 @@ class AkuTp(object):
     def __class_getitem__(cls, tp) -> 'AkuTp':
         origin = get_origin(tp)
         args = get_args(tp)
-        for aku_ty in cls.registry:
+        for aku_tp in cls.registry:
             try:
-                return aku_ty[tp, origin, args]
+                return aku_tp[tp, origin, args]
             except TypeError:
                 pass
         raise TypeError(f'unsupported annotation {tp}')
