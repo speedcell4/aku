@@ -100,7 +100,7 @@ class Aku(ArgumentParser):
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
 
-            if len(argument_parser._registries[AKU_DELAY]) == 0:
+            if len(argument_parser._registries.get(AKU_DELAY, {})) == 0:
                 break
             else:
                 for delay in argument_parser._registries[AKU_DELAY].values():

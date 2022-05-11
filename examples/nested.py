@@ -22,17 +22,17 @@ class Foo(object):
 
 
 class Bar(object):
-    def __init__(self, o: str = 'o', p: str = 'p'):
+    def __init__(self, o: str = 'o', p_with_many_underlines: str = 'p_with_many_underlines'):
         super(Bar, self).__init__()
         print(f'o => {o}')
-        print(f'p => {p}')
+        print(f'p_with_many_underlines => {p_with_many_underlines}')
 
 
 aku = Aku(always_use_subparse=True)
 
 
 @aku.option
-def first(x: Union[Type[Foo], Type[Bar]], **kwargs):
+def first(x: Union[Type[Foo], Type[Bar]] = Foo, **kwargs):
     print(f'kwargs => {kwargs}')
     x()
 

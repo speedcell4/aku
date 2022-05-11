@@ -183,8 +183,22 @@ class AkuUnion(AkuTp):
                 ))
 
         prefixes_name = join_names(prefixes, name)
-        argument_parser.add_argument(
-            f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
-            type=self.tp, choices=tuple(choices.keys()), required=None, default=SUPPRESS,
-            action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
-        )
+
+        if default == SUPPRESS:
+            argument_parser.add_argument(
+                f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
+                type=self.tp, choices=tuple(choices.keys()), required=None, default=SUPPRESS,
+                action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
+            )
+        else:
+            argument_parser.register(AKU_DELAY, prefixes + (name,), functools.partial(
+                AkuFn(default, None).add_argument,
+                argument_parser=argument_parser, name=name,
+                prefixes=prefixes, domain=domain, default=None,
+            ))
+
+            argument_parser.add_argument(
+                f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
+                type=self.tp, choices=tuple(choices.keys()), required=None, default=(default, default.__name__),
+                action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
+            )
