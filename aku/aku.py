@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import _init_argument_parser, fetch_name, AKU_FN, AKU
+from aku.utils import _init_argument_parser, fetch_name, AKU_FN, AKU, AKU_DELAY
 
 
 class AkuFormatter(ArgumentDefaultsHelpFormatter):
@@ -100,12 +100,12 @@ class Aku(ArgumentParser):
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
 
-            if len(argument_parser._registries['delay'][AKU]) == 0:
+            if len(argument_parser._registries[AKU_DELAY]) == 0:
                 break
             else:
-                for delay in argument_parser._registries['delay'][AKU]:
+                for delay in argument_parser._registries[AKU_DELAY].values():
                     delay()
-                argument_parser._registries['delay'][AKU].clear()
+                argument_parser._registries[AKU_DELAY].clear()
 
         if self.add_help:
             argument_parser.add_argument(

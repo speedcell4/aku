@@ -4,8 +4,8 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import register_homo_tuple, register_hetero_tuple, iter_annotations, join_names, join_dests, AKU_FN, \
-    get_action_group
+from aku.utils import AKU_FN, AKU_DELAY, get_action_group
+from aku.utils import register_homo_tuple, register_hetero_tuple, iter_annotations, join_names, join_dests
 
 
 class AkuTp(object):
@@ -176,8 +176,7 @@ class AkuUnion(AkuTp):
                 setattr(namespace, self.dest, (choices[values], values))
                 self.required = False
 
-                delay = parser._registries.get('delay')['@aku']
-                delay.append(functools.partial(
+                parser.register(AKU_DELAY, prefixes + (name,), functools.partial(
                     AkuFn(choices[values], None).add_argument,
                     argument_parser=parser, name=name,
                     prefixes=prefixes, domain=domain, default=None,

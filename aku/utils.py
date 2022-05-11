@@ -6,7 +6,7 @@ from typing import get_type_hints, Pattern, Tuple
 
 AKU = '@aku'
 AKU_FN = '@fn'
-AKU_ROOT = '@aku'
+AKU_DELAY = '@delay'
 
 
 def tp_bool(arg_strings: str) -> bool:
@@ -54,7 +54,7 @@ def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser
 
 def _init_argument_parser(argument_parser: ArgumentParser):
     register_type(tp_bool, argument_parser)
-    argument_parser.register('delay', AKU, [])
+    # argument_parser.register('delay', AKU, {})
 
 
 def iter_annotations(tp):
