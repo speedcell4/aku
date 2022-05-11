@@ -6,7 +6,7 @@ from typing import get_type_hints, Pattern, Tuple
 
 AKU = '@aku'
 AKU_FN = '@fn'
-AKU_ROOT = '@root'
+AKU_ROOT = '@aku'
 
 
 def tp_bool(arg_strings: str) -> bool:
@@ -73,7 +73,7 @@ def fetch_name(tp) -> str:
 def join_names(prefixes: Tuple[str, ...], name: str) -> str:
     if name.endswith('_'):
         name = name[:-1]
-    return '-'.join(prefixes + (name,)).lower()
+    return '-'.join(prefixes + (name,)).lower().replace('_', '-')
 
 
 def join_dests(domain: Tuple[str, ...], name: str) -> str:

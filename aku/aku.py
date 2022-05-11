@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import _init_argument_parser, fetch_name, AKU, AKU_FN, AKU_ROOT
+from aku.utils import _init_argument_parser, fetch_name, AKU_FN, AKU
 
 
 class AkuFormatter(ArgumentDefaultsHelpFormatter):
@@ -58,7 +58,7 @@ class Aku(ArgumentParser):
             option = self.options[0]
             AkuTp[Type[option]].add_argument(
                 argument_parser=argument_parser,
-                name=AKU_ROOT, default=SUPPRESS,
+                name=AKU, default=SUPPRESS,
                 prefixes=(), domain=(),
             )
         else:
@@ -76,7 +76,7 @@ class Aku(ArgumentParser):
                 option, argument_parser = options[arg]
                 AkuTp[Type[option]].add_argument(
                     argument_parser=argument_parser,
-                    name=AKU_ROOT, default=SUPPRESS,
+                    name=AKU, default=SUPPRESS,
                     prefixes=(), domain=(),
                 )
 

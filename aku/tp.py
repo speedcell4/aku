@@ -155,7 +155,7 @@ class AkuFn(AkuTp):
                 _, argument_parser = get_action_group(argument_parser, join_names(prefixes, name))
                 prefixes = prefixes + (name[:-1],)
 
-        argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})
+        argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, self.tp.__name__)})
 
         for arg, tp, df in iter_annotations(self.tp):
             AkuTp[tp].add_argument(
