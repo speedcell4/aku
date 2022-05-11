@@ -31,6 +31,7 @@ class Aku(ArgumentParser):
                  argument_default=None,
                  conflict_handler='error',
                  add_help=True,
+                 always_use_subparse=False,
                  allow_abbrev=False) -> None:
         super(Aku, self).__init__(
             prog=prog, usage=usage, description=description, epilog=epilog,
@@ -42,6 +43,7 @@ class Aku(ArgumentParser):
 
         self.options = []
         self.add_help = add_help
+        self.always_use_subparse = always_use_subparse
 
     def option(self, fn):
         self.options.append(fn)
@@ -54,7 +56,7 @@ class Aku(ArgumentParser):
             args = sys.argv[1:]
 
         namespace, argument_parser = None, self
-        if len(self.options) == 1:
+        if not self.always_use_subparse and len(self.options) == 1:
             option = self.options[0]
             AkuTp[Type[option]].add_argument(
                 argument_parser=argument_parser,

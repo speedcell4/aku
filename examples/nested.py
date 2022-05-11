@@ -3,32 +3,32 @@ from typing import Union, Type
 from aku import Aku
 
 
-def baz(c: float = 4, d: bool = True):
+def baz(a: float = 4, b: bool = True):
+    print(f'a => {a}')
+    print(f'b => {b}')
+
+
+def qux(c: str = 'nice', d: float = 0.):
     print(f'c => {c}')
     print(f'd => {d}')
 
 
-def qux(e: str = 'nice', f: float = 0.):
-    print(f'e => {e}')
-    print(f'f => {f}')
-
-
 class Foo(object):
-    def __init__(self, f: Union[Type[baz], Type[qux]], a: int = 1, b: int = 2):
+    def __init__(self, f: Union[Type[baz], Type[qux]], g: int = 1, h: int = 2):
         super(Foo, self).__init__()
         f()
-        print(f'a => {a}')
-        print(f'b => {b}')
+        print(f'g => {g}')
+        print(f'h => {h}')
 
 
 class Bar(object):
-    def __init__(self, x: str = 'x', y: str = 'y'):
+    def __init__(self, o: str = 'o', p: str = 'p'):
         super(Bar, self).__init__()
-        print(f'x => {x}')
-        print(f'y => {y}')
+        print(f'o => {o}')
+        print(f'p => {p}')
 
 
-aku = Aku()
+aku = Aku(always_use_subparse=True)
 
 
 @aku.option
