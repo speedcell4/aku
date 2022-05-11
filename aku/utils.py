@@ -7,6 +7,7 @@ from typing import get_type_hints, Pattern, Tuple
 AKU = '@aku'
 AKU_FN = '@fn'
 AKU_DELAY = '@delay'
+AKU_VISITED = '@visited'
 
 
 def tp_bool(arg_strings: str) -> bool:

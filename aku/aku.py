@@ -126,13 +126,8 @@ class Aku(ArgumentParser):
         if isinstance(namespace, Namespace):
             namespace = namespace.__dict__
 
-        for key, value in namespace.items():
-            print(f'{key} => {value}')
-
         curry, literal = {}, {}
         for key, value in namespace.items():
-            print('~~~~')
-            print(f'{key} => {value}')
 
             curry_co = curry
             literal_co = literal
@@ -144,9 +139,6 @@ class Aku(ArgumentParser):
                 curry_co[key], literal_co[key] = value
             else:
                 curry_co[key] = literal_co[key] = value
-
-            print(f'curry => {curry}')
-            print(f'literal => {literal}')
 
         def recur_curry(item):
             if isinstance(item, dict):
