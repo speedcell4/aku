@@ -3,7 +3,7 @@ from typing import Union, Type
 from aku import Aku
 
 
-def baz(c: float, d: bool = True):
+def baz(c: float = 4, d: bool = True):
     print(f'c => {c}')
     print(f'd => {d}')
 
@@ -14,9 +14,9 @@ def qux(e: str = 'nice', f: float = 0.):
 
 
 class Foo(object):
-    def __init__(self, fn: Union[Type[baz], Type[qux]], a: int = 1, b: int = 2):
+    def __init__(self, f: Union[Type[baz], Type[qux]], a: int = 1, b: int = 2):
         super(Foo, self).__init__()
-        fn()
+        f()
         print(f'a => {a}')
         print(f'b => {b}')
 
@@ -32,7 +32,14 @@ aku = Aku()
 
 
 @aku.option
-def main(x: Union[Type[Foo], Type[Bar]]):
+def first(x: Union[Type[Foo], Type[Bar]], **kwargs):
+    print(f'kwargs => {kwargs}')
+    x()
+
+
+@aku.option
+def another(x: Union[Type[Foo], Type[Bar]], **kwargs):
+    print(f'kwargs => {kwargs}')
     x()
 
 

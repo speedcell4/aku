@@ -109,8 +109,14 @@ class Aku(ArgumentParser):
         if isinstance(namespace, Namespace):
             namespace = namespace.__dict__
 
+        for key, value in namespace.items():
+            print(f'{key} => {value}')
+
         curry, literal = {}, {}
         for key, value in namespace.items():
+            print('~~~~')
+            print(f'{key} => {value}')
+
             curry_co = curry
             literal_co = literal
             *names, key = key.split('.')
@@ -121,6 +127,9 @@ class Aku(ArgumentParser):
                 curry_co[key], literal_co[key] = value
             else:
                 curry_co[key] = literal_co[key] = value
+
+            print(f'curry => {curry}')
+            print(f'literal => {literal}')
 
         def recur_curry(item):
             if isinstance(item, dict):
@@ -133,27 +142,28 @@ class Aku(ArgumentParser):
             else:
                 return item
 
-        def flatten_literal(item):
-            keys, values = [], []
+        def abbreviate_literal(item):
+            out, keys, values = {}, [], []
 
-            def recur(k, v):
+            def recur(prefixes, k, v):
                 nonlocal keys, values
 
                 if isinstance(v, dict):
                     for x, y in v.items():
-                        recur(k + (x,), y)
+                        if x == AKU_FN:
+                            out['-'.join(prefixes[1:] + (k,))] = y
+                        elif k.endswith('_'):
+                            recur(prefixes + (k[:-1],), x, y)
+                        else:
+                            recur(prefixes, x, y)
                 else:
-                    keys.append(k)
-                    values.append(v)
+                    out['-'.join(prefixes[1:] + (k,))] = v
 
-            recur((), item)
-            return {
-                '-'.join([x[:-1] for x in k[1:-1] if x.endswith('_')] + [k[-1]]): v
-                for k, v in zip(keys, values)
-            }
+            recur((), '', item)
+            return out
 
         curry = recur_curry(curry)
-        literal = flatten_literal(literal)
+        literal = abbreviate_literal(literal)
 
         assert len(curry) == 1
         for _, fn in curry.items():
