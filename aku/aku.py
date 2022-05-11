@@ -103,9 +103,13 @@ class Aku(ArgumentParser):
             if len(argument_parser._registries.get(AKU_DELAY, {})) == 0:
                 break
             else:
-                for delay in argument_parser._registries[AKU_DELAY].values():
+                names = []
+                for name, delay in list(argument_parser._registries[AKU_DELAY].items()):
+                    names.append(name)
                     delay()
-                argument_parser._registries[AKU_DELAY].clear()
+
+                for name in names:
+                    del argument_parser._registries[AKU_DELAY][name]
 
         if self.add_help:
             argument_parser.add_argument(
