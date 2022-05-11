@@ -4,8 +4,8 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import register_homo_tuple, register_hetero_tuple, tp_iter, join_names, join_dests, AKU_FN, \
-    get_action_group
+from aku.utils import AKU_FN, AKU_DELAY, get_action_group
+from aku.utils import register_homo_tuple, register_hetero_tuple, iter_annotations, join_names, join_dests
 
 
 class AkuTp(object):
@@ -25,9 +25,9 @@ class AkuTp(object):
     def __class_getitem__(cls, tp) -> 'AkuTp':
         origin = get_origin(tp)
         args = get_args(tp)
-        for aku_ty in cls.registry:
+        for aku_tp in cls.registry:
             try:
-                return aku_ty[tp, origin, args]
+                return aku_tp[tp, origin, args]
             except TypeError:
                 pass
         raise TypeError(f'unsupported annotation {tp}')
@@ -155,9 +155,9 @@ class AkuFn(AkuTp):
                 _, argument_parser = get_action_group(argument_parser, join_names(prefixes, name))
                 prefixes = prefixes + (name[:-1],)
 
-        argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, name)})
+        argument_parser.set_defaults(**{join_dests(domain, AKU_FN): (self.tp, self.tp.__name__)})
 
-        for arg, tp, df in tp_iter(self.tp):
+        for arg, tp, df in iter_annotations(self.tp):
             AkuTp[tp].add_argument(
                 argument_parser=argument_parser, name=arg,
                 prefixes=prefixes, domain=domain, default=df,
@@ -176,16 +176,29 @@ class AkuUnion(AkuTp):
                 setattr(namespace, self.dest, (choices[values], values))
                 self.required = False
 
-                delay = parser._registries.get('delay')['@aku']
-                delay.append(functools.partial(
+                parser.register(AKU_DELAY, prefixes + (name,), functools.partial(
                     AkuFn(choices[values], None).add_argument,
                     argument_parser=parser, name=name,
                     prefixes=prefixes, domain=domain, default=None,
                 ))
 
         prefixes_name = join_names(prefixes, name)
-        argument_parser.add_argument(
-            f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
-            type=self.tp, choices=tuple(choices.keys()), required=None, default=SUPPRESS,
-            action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
-        )
+
+        if default == SUPPRESS:
+            argument_parser.add_argument(
+                f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
+                type=self.tp, choices=tuple(choices.keys()), required=None, default=SUPPRESS,
+                action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
+            )
+        else:
+            argument_parser.register(AKU_DELAY, prefixes + (name,), functools.partial(
+                AkuFn(default, None).add_argument,
+                argument_parser=argument_parser, name=name,
+                prefixes=prefixes, domain=domain, default=None,
+            ))
+
+            argument_parser.add_argument(
+                f'--{prefixes_name}', dest=join_dests(domain + (name,), AKU_FN), help=prefixes_name,
+                type=self.tp, choices=tuple(choices.keys()), required=False, default=(default, default.__name__),
+                action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
+            )

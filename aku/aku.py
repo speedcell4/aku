@@ -5,10 +5,25 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import _init_argument_parser, fetch_name, AKU, AKU_FN, AKU_ROOT
+from aku.utils import _init_argument_parser, fetch_name, AKU_FN, AKU, AKU_DELAY
 
 
 class AkuFormatter(ArgumentDefaultsHelpFormatter):
+    def _expand_help(self, action):
+        params = dict(vars(action), prog=self._prog)
+        if params['dest'].endswith(AKU_FN) and isinstance(params['default'], tuple):
+            params['default'] = params['default'][1]
+        for name in list(params):
+            if params[name] is SUPPRESS:
+                del params[name]
+        for name in list(params):
+            if hasattr(params[name], '__name__'):
+                params[name] = params[name].__name__
+        if params.get('choices') is not None:
+            choices_str = ', '.join([str(c) for c in params['choices']])
+            params['choices'] = choices_str
+        return self._get_help_string(action) % params
+
     def _format_actions_usage(self, actions, groups):
         required_option_strings = [
             action.option_strings[-1][2:]
@@ -31,6 +46,7 @@ class Aku(ArgumentParser):
                  argument_default=None,
                  conflict_handler='error',
                  add_help=True,
+                 always_use_subparse=False,
                  allow_abbrev=False) -> None:
         super(Aku, self).__init__(
             prog=prog, usage=usage, description=description, epilog=epilog,
@@ -42,6 +58,7 @@ class Aku(ArgumentParser):
 
         self.options = []
         self.add_help = add_help
+        self.always_use_subparse = always_use_subparse
 
     def option(self, fn):
         self.options.append(fn)
@@ -54,11 +71,11 @@ class Aku(ArgumentParser):
             args = sys.argv[1:]
 
         namespace, argument_parser = None, self
-        if len(self.options) == 1:
+        if not self.always_use_subparse and len(self.options) == 1:
             option = self.options[0]
             AkuTp[Type[option]].add_argument(
                 argument_parser=argument_parser,
-                name=AKU_ROOT, default=SUPPRESS,
+                name=AKU, default=SUPPRESS,
                 prefixes=(), domain=(),
             )
         else:
@@ -76,19 +93,19 @@ class Aku(ArgumentParser):
                 option, argument_parser = options[arg]
                 AkuTp[Type[option]].add_argument(
                     argument_parser=argument_parser,
-                    name=AKU_ROOT, default=SUPPRESS,
+                    name=AKU, default=SUPPRESS,
                     prefixes=(), domain=(),
                 )
 
         while True:
             namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
 
-            if len(argument_parser._registries['delay'][AKU]) == 0:
+            if len(argument_parser._registries.get(AKU_DELAY, {})) == 0:
                 break
             else:
-                for delay in argument_parser._registries['delay'][AKU]:
+                for delay in argument_parser._registries[AKU_DELAY].values():
                     delay()
-                argument_parser._registries['delay'][AKU].clear()
+                argument_parser._registries[AKU_DELAY].clear()
 
         if self.add_help:
             argument_parser.add_argument(
@@ -111,6 +128,7 @@ class Aku(ArgumentParser):
 
         curry, literal = {}, {}
         for key, value in namespace.items():
+
             curry_co = curry
             literal_co = literal
             *names, key = key.split('.')
@@ -133,27 +151,28 @@ class Aku(ArgumentParser):
             else:
                 return item
 
-        def flatten_literal(item):
-            keys, values = [], []
+        def abbreviate_literal(item):
+            out, keys, values = {}, [], []
 
-            def recur(k, v):
+            def recur(prefixes, k, v):
                 nonlocal keys, values
 
                 if isinstance(v, dict):
                     for x, y in v.items():
-                        recur(k + (x,), y)
+                        if x == AKU_FN:
+                            out['-'.join(prefixes[1:] + (k,))] = y
+                        elif k.endswith('_'):
+                            recur(prefixes + (k[:-1],), x, y)
+                        else:
+                            recur(prefixes, x, y)
                 else:
-                    keys.append(k)
-                    values.append(v)
+                    out['-'.join(prefixes[1:] + (k,))] = v
 
-            recur((), item)
-            return {
-                '-'.join([x[:-1] for x in k[1:-1] if x.endswith('_')] + [k[-1]]): v
-                for k, v in zip(keys, values)
-            }
+            recur((), '', item)
+            return out
 
         curry = recur_curry(curry)
-        literal = flatten_literal(literal)
+        literal = abbreviate_literal(literal)
 
         assert len(curry) == 1
         for _, fn in curry.items():
