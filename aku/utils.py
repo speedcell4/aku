@@ -53,9 +53,8 @@ def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser
     return register_type(fn, argument_parser)
 
 
-def _init_argument_parser(argument_parser: ArgumentParser):
+def init_argument_parser(argument_parser: ArgumentParser):
     register_type(tp_bool, argument_parser)
-    # argument_parser.register('delay', AKU, {})
 
 
 def iter_annotations(tp):
@@ -68,16 +67,19 @@ def iter_annotations(tp):
 
 
 def fetch_name(tp) -> str:
-    return tp.__qualname__.lower()
+    try:
+        return tp.__qualname__.lower()
+    except AttributeError:
+        return tp.__class__.__qualname__.lower()
 
 
-def join_names(prefixes: Tuple[str, ...], name: str) -> str:
+def join_name(prefixes: Tuple[str, ...], name: str) -> str:
     if name.endswith('_'):
         name = name[:-1]
     return '-'.join(prefixes + (name,)).lower().replace('_', '-')
 
 
-def join_dests(domain: Tuple[str, ...], name: str) -> str:
+def join_dest(domain: Tuple[str, ...], name: str) -> str:
     return '.'.join(domain + (name,)).lower()
 
 

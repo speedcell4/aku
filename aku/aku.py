@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import _init_argument_parser, fetch_name, AKU_FN, AKU, AKU_DELAY
+from aku.utils import init_argument_parser, fetch_name, AKU_FN, AKU, AKU_DELAY
 
 
 class AkuFormatter(ArgumentDefaultsHelpFormatter):
@@ -54,7 +54,7 @@ class Aku(ArgumentParser):
             fromfile_prefix_chars=fromfile_prefix_chars, argument_default=argument_default,
             conflict_handler=conflict_handler, add_help=False, allow_abbrev=allow_abbrev,
         )
-        _init_argument_parser(self)
+        init_argument_parser(self)
 
         self.options = []
         self.add_help = add_help
