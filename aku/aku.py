@@ -1,37 +1,12 @@
 import functools
 import inspect
 import sys
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, SUPPRESS
+from argparse import ArgumentParser, Namespace, SUPPRESS
 from typing import Type
 
+from aku.formatter import AkuFormatter
 from aku.tp import AkuTp
 from aku.utils import init_argument_parser, get_name, AKU_FN, AKU, AKU_DELAY
-
-
-class AkuFormatter(ArgumentDefaultsHelpFormatter):
-    def _expand_help(self, action):
-        params = dict(vars(action), prog=self._prog)
-        if params['dest'].endswith(AKU_FN) and isinstance(params['default'], tuple):
-            params['default'] = params['default'][1]
-        for name in list(params):
-            if params[name] is SUPPRESS:
-                del params[name]
-        for name in list(params):
-            if hasattr(params[name], '__name__'):
-                params[name] = params[name].__name__
-        if params.get('choices') is not None:
-            choices_str = ', '.join([str(c) for c in params['choices']])
-            params['choices'] = choices_str
-        return self._get_help_string(action) % params
-
-    def _format_actions_usage(self, actions, groups):
-        required_option_strings = [
-            action.option_strings[-1][2:]
-            for action in actions if action.required
-        ]
-        if len(required_option_strings) > 0:
-            return f'-- [{"|".join(required_option_strings)}]'
-        return ''
 
 
 class Aku(ArgumentParser):
