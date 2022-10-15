@@ -4,9 +4,10 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import AKU_FN, AKU_DELAY, get_action_group, register_set_type, register_frozenset_type, get_name, \
-    get_option
-from aku.utils import register_homo_tuple_type, register_hetero_tuple, iter_annotations, get_dest
+from aku.utils import AKU_FN, AKU_DELAY, get_action_group
+from aku.utils import get_name, get_dest, get_option, iter_annotations
+from aku.utils import register_set_type, register_frozenset_type
+from aku.utils import register_homo_tuple_type, register_hetero_tuple_type
 
 
 class AkuTp(object):
@@ -97,7 +98,7 @@ class AkuHeteroTuple(AkuTp):
         option = get_option(domain, name)
         argument_parser.add_argument(
             f'--{option}', dest=get_dest(domain, name), help=option,
-            type=register_hetero_tuple(self.tp, argument_parser), choices=self.choices,
+            type=register_hetero_tuple_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
             action=StoreAction, default=default, metavar=f"({', '.join(get_name(t).lower() for t in self.tp)})",
         )
@@ -176,7 +177,6 @@ class AkuFn(AkuTp):
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
-
         if name is not None:
             domain = domain + (name,)
             if name.endswith('_'):

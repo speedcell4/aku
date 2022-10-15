@@ -1,11 +1,6 @@
 import collections
 import sys
 
-__all__ = [
-    'Literal',
-    'get_origin', 'get_args',
-]
-
 if sys.version_info < (3, 8):
     from typing import _SpecialForm, _GenericAlias, Generic, _tp_cache, _type_check, _remove_dups_flatten, Union
 
@@ -100,4 +95,4 @@ if sys.version_info < (3, 8):
             return res
         return ()
 else:
-    from typing import Literal, get_origin, get_args
+    from typing import get_origin

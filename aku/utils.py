@@ -2,7 +2,7 @@ import inspect
 import re
 from argparse import ArgumentParser, SUPPRESS
 from inspect import Parameter
-from typing import get_type_hints, Pattern, Tuple, Set, FrozenSet, Callable
+from typing import get_type_hints, Pattern, Tuple, Set, FrozenSet
 
 AKU = '@aku'
 AKU_FN = '@fn'
@@ -38,8 +38,8 @@ def register_homo_tuple_type(tp: type, argument_parser: ArgumentParser, pattern:
     return register_type(fn, argument_parser)
 
 
-def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser,
-                          pattern: Pattern = re.compile(r',\s*')) -> None:
+def register_hetero_tuple_type(tps: Tuple[type, ...], argument_parser: ArgumentParser,
+                               pattern: Pattern = re.compile(r',\s*')) -> None:
     def fn(string: str) -> Tuple[tps]:
         nonlocal tps
 
@@ -82,8 +82,20 @@ def iter_annotations(tp):
                 yield name, param.annotation, param.default
 
 
+def get_action_group(argument_parser: ArgumentParser, title: str):
+    argument_parser = getattr(argument_parser, 'container', argument_parser)
+
+    for action_group in argument_parser._action_groups:
+        if action_group.title == title:
+            return action_group
+
+    action_group = argument_parser.add_argument_group(title=title)
+    action_group.container = argument_parser
+    return argument_parser, action_group
+
+
 def rename(name: str):
-    def wrap(tp: Callable) -> Callable:
+    def wrap(tp: type) -> type:
         assert not hasattr(tp, AKU_NAME), f'{tp} is already renamed to {getattr(tp, AKU_NAME)}'
         setattr(tp, AKU_NAME, name)
         return tp
@@ -91,7 +103,7 @@ def rename(name: str):
     return wrap
 
 
-def get_name(tp: Callable) -> str:
+def get_name(tp: type) -> str:
     try:
         return getattr(tp, AKU_NAME, tp.__qualname__)
     except AttributeError:
@@ -105,15 +117,3 @@ def get_dest(domain: Tuple[str, ...], name: str) -> str:
 def get_option(domain: Tuple[str, ...], name: str) -> str:
     prefix = tuple(d.removesuffix('_') for d in domain if d.endswith('_'))
     return '-'.join(prefix + (name.removesuffix('_'),)).lower().replace('_', '-')
-
-
-def get_action_group(argument_parser: ArgumentParser, title: str):
-    argument_parser = getattr(argument_parser, 'container', argument_parser)
-
-    for action_group in argument_parser._action_groups:
-        if action_group.title == title:
-            return action_group
-
-    action_group = argument_parser.add_argument_group(title=title)
-    action_group.container = argument_parser
-    return argument_parser, action_group
