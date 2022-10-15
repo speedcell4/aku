@@ -42,13 +42,13 @@ from aku import Aku
 aku = Aku()
 
 
-@aku.option
+@aku.register
 def foo(a: int, b: bool = True, c: str = '3', d: float = 4.0, e: Path = Path.home()):
-    print(f'a => {a}')
-    print(f'b => {b}')
-    print(f'c => {c}')
-    print(f'd => {d}')
-    print(f'e => {e}')
+  print(f'a => {a}')
+  print(f'b => {b}')
+  print(f'c => {c}')
+  print(f'd => {d}')
+  print(f'e => {e}')
 
 
 aku.run()
@@ -109,9 +109,9 @@ foo(a=args.a, b=args.b, c=args.c, d=args.d, e=args.e)
 Moreover, if you register more than one functions, e.g., register function `add`,
 
 ```python
-@aku.option
+@aku.register
 def add(x: int, y: int):
-    print(f'{x} + {y} => {x + y}')
+  print(f'{x} + {y} => {x + y}')
 ```
 
 Then you can choose which one to run by passing its name as the first parameter,
@@ -150,16 +150,16 @@ from aku import Aku, Literal
 aku = Aku()
 
 
-@aku.option
+@aku.register
 def baz(a: List[int], b: Tuple[bool, ...], c: Tuple[int, bool, str], d: Literal[42, 1905]):
-    print(f'a => {a}')
-    print(f'b => {b}')
-    print(f'c => {c}')
-    print(f'd => {d}')
+  print(f'a => {a}')
+  print(f'b => {b}')
+  print(f'c => {c}')
+  print(f'd => {d}')
 
 
 if __name__ == '__main__':
-    aku.run()
+  aku.run()
 ```
 
 * Argument `a` is annotated with `List[int]`, thus every `--a` appends one item at the end of the existing list
@@ -194,29 +194,29 @@ from aku import Aku
 
 
 def add(x: int, y: int):
-    print(f'{x} + {y} => {x + y}')
+  print(f'{x} + {y} => {x + y}')
 
 
 def sub(x: int, y: int):
-    print(f'{x} - {y} => {x - y}')
+  print(f'{x} - {y} => {x - y}')
 
 
 aku = Aku()
 
 
-@aku.option
+@aku.register
 def one(op: Union[Type[add], Type[sub]]):
-    op()
+  op()
 
 
-@aku.option
+@aku.register
 def both(lhs_: Type[add], rhs_: Type[sub]):
-    lhs_()
-    rhs_()
+  lhs_()
+  rhs_()
 
 
 if __name__ == '__main__':
-    aku.run()
+  aku.run()
 ```
 
 ```shell script

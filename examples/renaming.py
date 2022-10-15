@@ -44,7 +44,7 @@ class Bar(object):
         print(f'w => {w}')
 
 
-@app.option
+@app.register
 def main(fn: Union[Type[foo], Type[bar]] = foo,
          cls: Union[Type[Foo], Type[Bar]] = Foo,
          method1: Union[Type[Foo.qux], Type[Bar.qux]] = Foo.qux,

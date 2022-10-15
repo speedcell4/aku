@@ -5,7 +5,7 @@ from aku import Aku
 app = Aku()
 
 
-@app.option
+@app.register
 def foo(x: List[Literal['a', 'i', 'u', 'e', 'o']]):
     print(f'x => {x}')
 

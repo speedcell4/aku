@@ -5,27 +5,27 @@ from aku import Aku
 app = Aku()
 
 
-@app.option
+@app.register
 def foo(x: List[int]):
     print(f'x => {x}')
 
 
-@app.option
+@app.register
 def bar(x: Tuple[str, int, float]):
     print(f'x => {x}')
 
 
-@app.option
+@app.register
 def baz(x: Tuple[int, ...]):
     print(f'x => {x}')
 
 
-@app.option
+@app.register
 def qux(x: Set[int]):
     print(f'x => {x}')
 
 
-@app.option
+@app.register
 def quux(x: FrozenSet[int]):
     print(f'x => {x}')
 

@@ -17,7 +17,7 @@ def baz(name: str = 'third'):
     print(f'{baz.__name__}.name => {name}')
 
 
-@app.option
+@app.register
 def main(fn1_: Type[foo] = foo, fn2_: Type[bar] = bar, fn3: Type[baz] = baz, **kwargs):
     fn1_()
     fn2_()

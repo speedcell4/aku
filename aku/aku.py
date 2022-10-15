@@ -10,46 +10,45 @@ from aku.utils import get_name, AKU_FN, AKU, AKU_DELAY
 
 
 class Aku(object):
-    def __init__(self, always_use_subparse: bool = False) -> None:
+    def __init__(self, always_add_subparsers: bool = False) -> None:
         super(Aku, self).__init__()
-
         self.argument_parser = ArgumentParser()
+        self.registry = []
 
-        self.options = []
-        self.always_use_subparse = always_use_subparse
+        self.always_add_subparsers = always_add_subparsers
 
-    def option(self, fn):
-        self.options.append(fn)
+    def register(self, fn):
+        self.registry.append(fn)
         return fn
 
     def _parse(self, args: List[str] = None, namespace: Namespace = None):
-        assert len(self.options) > 0, f'you are supposed to .option at least one callable'
+        assert len(self.registry) > 0, f'you are supposed to register at least one callable'
 
         if args is None:
             args = sys.argv[1:]
 
         argument_parser = self.argument_parser
-        if not self.always_use_subparse and len(self.options) == 1:
-            option = self.options[0]
-            AkuTp[Type[option]].add_argument(
+        if not self.always_add_subparsers and len(self.registry) == 1:
+            fn = self.registry[0]
+            AkuTp[Type[fn]].add_argument(
                 argument_parser=argument_parser,
                 name=AKU, default=SUPPRESS,
                 prefixes=(), domain=(),
             )
         else:
             subparsers = argument_parser.add_subparsers()
-            options = {}
-            for option in self.options:
-                name = get_name(option)
-                if name not in options:
-                    options[name] = (option, subparsers.add_parser(name=name))
+            registry = {}
+            for fn in self.registry:
+                name = get_name(fn)
+                if name not in registry:
+                    registry[name] = (fn, subparsers.add_parser(name=name))
                 else:
                     raise ValueError(f'{name} was already registered')
 
-            if len(args) > 0 and args[0] in options:
+            if len(args) > 0 and args[0] in registry:
                 arg, *args = args
-                option, argument_parser = options[arg]
-                AkuTp[Type[option]].add_argument(
+                fn, argument_parser = registry[arg]
+                AkuTp[Type[fn]].add_argument(
                     argument_parser=argument_parser,
                     name=AKU, default=SUPPRESS,
                     prefixes=(), domain=(),
@@ -69,11 +68,6 @@ class Aku(object):
                 for name in names:
                     del argument_parser._registries[AKU_DELAY][name]
 
-        # if self.add_help:
-        #     argument_parser.add_argument(
-        #         '--help', action='help', default=SUPPRESS,
-        #         help='show this help message and exit',
-        #     )
         for action in argument_parser._actions:
             if action.required is None:
                 action.required = True

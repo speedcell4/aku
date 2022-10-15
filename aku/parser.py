@@ -1,22 +1,23 @@
 from argparse import ArgumentParser as _ArgumentParser
+from typing import Any, Tuple
 
 from aku.formatter import AkuFormatter
 from aku.utils import register_type, bool_type
 
 
 class ArgumentParser(_ArgumentParser):
-    def __init__(self, prog=None,
-                 usage=None,
-                 description=None,
-                 epilog=None,
-                 parents=(),
-                 formatter_class=AkuFormatter,
-                 prefix_chars='-',
-                 fromfile_prefix_chars=None,
-                 argument_default=None,
-                 conflict_handler='error',
-                 add_help=True,
-                 allow_abbrev=False) -> None:
+    def __init__(self, prog: str = None,
+                 usage: str = None,
+                 description: str = None,
+                 epilog: str = None,
+                 parents: Tuple['_ArgumentParser', ...] = (),
+                 formatter_class: Any = AkuFormatter,
+                 prefix_chars: str = '-',
+                 fromfile_prefix_chars: str = None,
+                 argument_default: Any = None,
+                 conflict_handler: str = 'error',
+                 add_help: bool = True,
+                 allow_abbrev: bool = False) -> None:
         super(ArgumentParser, self).__init__(
             prog=prog,
             usage=usage,
