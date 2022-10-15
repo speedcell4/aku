@@ -4,8 +4,8 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import AKU_FN, AKU_DELAY, get_action_group, gen_set_type, gen_frozenset_type, get_name
-from aku.utils import gen_homo_tuple_type, register_hetero_tuple, iter_annotations, join_name, join_dest
+from aku.utils import AKU_FN, AKU_DELAY, get_action_group, register_set_type, register_frozenset_type, get_name
+from aku.utils import register_homo_tuple_type, register_hetero_tuple, iter_annotations, join_name, join_dest
 
 
 class AkuTp(object):
@@ -86,7 +86,7 @@ class AkuHomoTuple(AkuTp):
         prefixes_name = join_name(prefixes, name)
         argument_parser.add_argument(
             f'--{prefixes_name}', dest=join_dest(domain, name), help=prefixes_name,
-            type=gen_homo_tuple_type(self.tp, argument_parser), choices=self.choices,
+            type=register_homo_tuple_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
             action=StoreAction, default=default, metavar=f'({get_name(self.tp).lower()}, ...)',
         )
@@ -119,7 +119,7 @@ class AkuSet(AkuTp):
         prefixes_name = join_name(prefixes, name)
         argument_parser.add_argument(
             f'--{prefixes_name}', dest=join_dest(domain, name), help=prefixes_name,
-            type=gen_set_type(self.tp, argument_parser), choices=self.choices,
+            type=register_set_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
             action=StoreAction, default=default, metavar=f'{{{get_name(self.tp).lower()}}}',
         )
@@ -137,7 +137,7 @@ class AkuFrozenSet(AkuTp):
         prefixes_name = join_name(prefixes, name)
         argument_parser.add_argument(
             f'--{prefixes_name}', dest=join_dest(domain, name), help=prefixes_name,
-            type=gen_frozenset_type(self.tp, argument_parser), choices=self.choices,
+            type=register_frozenset_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
             action=StoreAction, default=default, metavar=f'frozenset{{{get_name(self.tp).lower()}}}',
         )

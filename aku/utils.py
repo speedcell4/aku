@@ -11,16 +11,16 @@ AKU_VISITED = '@visited'
 AKU_NAME = '__aku_name__'
 
 
-def tp_bool(arg_strings: str) -> bool:
-    arg_strings = arg_strings.lower().strip()
-    if arg_strings in ('t', 'true', 'y', 'yes', '1'):
+def bool_type(string: str) -> bool:
+    string = string.lower().strip()
+    if string in ('t', 'true', 'y', 'yes', '1'):
         return True
-    if arg_strings in ('f', 'false', 'n', 'no', '0'):
+    if string in ('f', 'false', 'n', 'no', '0'):
         return False
     raise ValueError
 
 
-def gen_type(fn, argument_parser: ArgumentParser):
+def register_type(fn, argument_parser: ArgumentParser):
     tp = get_type_hints(fn)['return']
     registry = argument_parser._registries['type']
     if tp not in registry:
@@ -28,53 +28,49 @@ def gen_type(fn, argument_parser: ArgumentParser):
     return fn
 
 
-def gen_homo_tuple_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
-    def fn(arg_strings: str) -> Tuple[tp, ...]:
+def register_homo_tuple_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(string: str) -> Tuple[tp, ...]:
         nonlocal tp
 
         tp = argument_parser._registry_get('type', tp, tp)
-        return tuple(tp(arg) for arg in re.split(pattern, arg_strings.strip()))
+        return tuple(tp(arg) for arg in re.split(pattern, string.strip()))
 
-    return gen_type(fn, argument_parser)
-
-
-def gen_set_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
-    def fn(arg_strings: str) -> Set[tp]:
-        nonlocal tp
-
-        tp = argument_parser._registry_get('type', tp, tp)
-        return set(tp(arg) for arg in re.split(pattern, arg_strings.strip()))
-
-    return gen_type(fn, argument_parser)
-
-
-def gen_frozenset_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
-    def fn(arg_strings: str) -> FrozenSet[tp]:
-        nonlocal tp
-
-        tp = argument_parser._registry_get('type', tp, tp)
-        return frozenset(tp(arg) for arg in re.split(pattern, arg_strings.strip()))
-
-    return gen_type(fn, argument_parser)
+    return register_type(fn, argument_parser)
 
 
 def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser,
                           pattern: Pattern = re.compile(r',\s*')) -> None:
-    def fn(arg_strings: str) -> Tuple[tps]:
+    def fn(string: str) -> Tuple[tps]:
         nonlocal tps
 
         tps = [argument_parser._registry_get('type', tp, tp) for tp in tps]
-        args = re.split(pattern, arg_strings.strip())
+        args = re.split(pattern, string.strip())
 
         if len(tps) != len(args):
             raise ValueError(f'the number of arguments does not match, {len(tps)} != {len(args)}')
         return tuple(tp(arg) for tp, arg in zip(tps, args))
 
-    return gen_type(fn, argument_parser)
+    return register_type(fn, argument_parser)
 
 
-def init_argument_parser(argument_parser: ArgumentParser):
-    gen_type(tp_bool, argument_parser)
+def register_set_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(string: str) -> Set[tp]:
+        nonlocal tp
+
+        tp = argument_parser._registry_get('type', tp, tp)
+        return set(tp(arg) for arg in re.split(pattern, string.strip()))
+
+    return register_type(fn, argument_parser)
+
+
+def register_frozenset_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(string: str) -> FrozenSet[tp]:
+        nonlocal tp
+
+        tp = argument_parser._registry_get('type', tp, tp)
+        return frozenset(tp(arg) for arg in re.split(pattern, string.strip()))
+
+    return register_type(fn, argument_parser)
 
 
 def iter_annotations(tp):
