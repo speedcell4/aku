@@ -1,7 +1,6 @@
 from typing import Type, Union
 
 from aku import Aku
-from aku.utils import rename
 
 app = Aku()
 
@@ -24,7 +23,6 @@ class Foo(object):
         print(f'z => {z}')
 
     @classmethod
-    @rename('thud')
     def quux(cls, w: str = 'w') -> None:
         print(f'w => {w}')
 
@@ -39,7 +37,6 @@ class Bar(object):
         print(f'z => {z}')
 
     @classmethod
-    @rename('fred')
     def quux(cls, w: str = 'w') -> None:
         print(f'w => {w}')
 
@@ -47,12 +44,10 @@ class Bar(object):
 @app.register
 def main(a: Union[Type[foo], Type[bar]] = foo,
          b: Union[Type[Foo], Type[Bar]] = Foo,
-         c: Union[Type[Foo.qux], Type[Bar.qux]] = Foo.qux,
-         d: Union[Type[Foo.quux], Type[Bar.quux]] = Foo.quux, **kwargs):
+         c: Union[Type[Foo.qux], Type[Bar.qux]] = Foo.qux, **kwargs):
     a()
     b()
     c()
-    d()
     print(kwargs['@aku'])
 
 

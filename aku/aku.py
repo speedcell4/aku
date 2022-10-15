@@ -115,6 +115,9 @@ class Aku(object):
             def recur(prefix, domain, v):
                 nonlocal keys, values
 
+                if domain.startswith('_'):
+                    return
+
                 if isinstance(v, dict):
                     for x, y in v.items():
                         if x == AKU_FN:

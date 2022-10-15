@@ -8,7 +8,6 @@ AKU = '@aku'
 AKU_FN = '@fn'
 AKU_DELAY = '@delay'
 AKU_VISITED = '@visited'
-AKU_NAME = '__aku_name__'
 
 
 def bool_type(string: str) -> bool:
@@ -97,18 +96,9 @@ def get_action_group(argument_parser: ArgumentParser, title: str):
     return argument_parser, action_group
 
 
-def rename(name: str):
-    def wrap(tp: type) -> type:
-        assert not hasattr(tp, AKU_NAME), f'{tp} is already renamed to {getattr(tp, AKU_NAME)}'
-        setattr(tp, AKU_NAME, name)
-        return tp
-
-    return wrap
-
-
 def get_name(tp: type) -> str:
     try:
-        return getattr(tp, AKU_NAME, tp.__qualname__)
+        return tp.__qualname__
     except AttributeError:
         return tp.__class__.__qualname__
 
