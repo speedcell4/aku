@@ -130,57 +130,56 @@ class Aku(ArgumentParser):
         if isinstance(namespace, Namespace):
             namespace = namespace.__dict__
 
-        curry, literal = {}, {}
+        partial, literal = {}, {}
         for key, value in namespace.items():
 
-            curry_co = curry
+            partial_co = partial
             literal_co = literal
             *names, key = key.split('.')
             for name in names:
-                curry_co = curry_co.setdefault(name, {})
+                partial_co = partial_co.setdefault(name, {})
                 literal_co = literal_co.setdefault(name, {})
             if key == AKU_FN:
-                curry_co[key], literal_co[key] = value
+                partial_co[key], literal_co[key] = value
             else:
-                curry_co[key] = literal_co[key] = value
+                partial_co[key] = literal_co[key] = value
 
-        def recur_curry(item):
+        def recur_partial(item):
             if isinstance(item, dict):
                 if AKU_FN in item:
                     func = item.pop(AKU_FN)
-                    kwargs = {k: recur_curry(v) for k, v in item.items()}
+                    kwargs = {k: recur_partial(v) for k, v in item.items()}
                     return functools.partial(func, **kwargs)
                 else:
-                    return {k: recur_curry(v) for k, v in item.items()}
+                    return {k: recur_partial(v) for k, v in item.items()}
             else:
                 return item
 
-        def abbreviate_literal(item):
+        def recur_literal(item):
             out, keys, values = {}, [], []
 
-            def recur(prefixes, k, v):
+            def recur(prefixes, domain, v):
                 nonlocal keys, values
 
                 if isinstance(v, dict):
                     for x, y in v.items():
                         if x == AKU_FN:
-                            out['-'.join(prefixes[1:] + (k,))] = y
-                        elif k.endswith('_'):
-                            recur(prefixes + (k[:-1],), x, y)
+                            out['-'.join((*prefixes[1:], domain.removesuffix('_')))] = y
+                        elif domain.endswith('_'):
+                            recur(prefixes + (domain.removesuffix('_'),), x, y)
                         else:
                             recur(prefixes, x, y)
                 else:
-                    out['-'.join(prefixes[1:] + (k,))] = v
+                    out['-'.join(prefixes + (domain,))] = v
 
             recur((), '', item)
             return out
 
-        curry = recur_curry(curry)
-        literal = abbreviate_literal(literal)
+        partial = recur_partial(partial)
 
-        assert len(curry) == 1
-        for _, fn in curry.items():
+        assert len(partial) == 1
+        for _, fn in partial.items():
             if inspect.getfullargspec(fn).varkw is None:
                 return fn()
             else:
-                return fn(**{AKU: literal})
+                return fn(**{AKU: recur_literal(literal)})
