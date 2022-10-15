@@ -45,14 +45,15 @@ class Bar(object):
 
 
 @app.register
-def main(fn: Union[Type[foo], Type[bar]] = foo,
-         cls: Union[Type[Foo], Type[Bar]] = Foo,
-         method1: Union[Type[Foo.qux], Type[Bar.qux]] = Foo.qux,
-         method2: Union[Type[Foo.quux], Type[Bar.quux]] = Foo.quux):
-    fn()
-    cls()
-    method1()
-    method2()
+def main(a: Union[Type[foo], Type[bar]] = foo,
+         b: Union[Type[Foo], Type[Bar]] = Foo,
+         c: Union[Type[Foo.qux], Type[Bar.qux]] = Foo.qux,
+         d: Union[Type[Foo.quux], Type[Bar.quux]] = Foo.quux, **kwargs):
+    a()
+    b()
+    c()
+    d()
+    print(kwargs['@aku'])
 
 
 if __name__ == '__main__':

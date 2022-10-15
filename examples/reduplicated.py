@@ -18,10 +18,10 @@ def baz(name: str = 'third'):
 
 
 @app.register
-def main(fn1_: Type[foo] = foo, fn2_: Type[bar] = bar, fn3: Type[baz] = baz, **kwargs):
-    fn1_()
-    fn2_()
-    fn3()
+def main(a_: Type[foo] = foo, b_: Type[bar] = bar, c: Type[baz] = baz, **kwargs):
+    a_()
+    b_()
+    c()
     print(kwargs['@aku'])
 
 
