@@ -98,10 +98,10 @@ def get_name(tp: Callable) -> str:
         return tp.__class__.__qualname__
 
 
-def join_name(prefixes: Tuple[str, ...], name: str) -> str:
+def join_name(prefix: Tuple[str, ...], name: str) -> str:
     if name.endswith('_'):
         name = name[:-1]
-    return '-'.join(prefixes + (name,)).lower().replace('_', '-')
+    return '-'.join(prefix + (name,)).lower().replace('_', '-')
 
 
 def join_dest(domain: Tuple[str, ...], name: str) -> str:

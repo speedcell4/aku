@@ -33,7 +33,7 @@ class Aku(object):
             AkuTp[Type[fn]].add_argument(
                 argument_parser=argument_parser,
                 name=AKU, default=SUPPRESS,
-                prefixes=(), domain=(),
+                prefix=(), domain=(),
             )
         else:
             subparsers = argument_parser.add_subparsers()
@@ -51,7 +51,7 @@ class Aku(object):
                 AkuTp[Type[fn]].add_argument(
                     argument_parser=argument_parser,
                     name=AKU, default=SUPPRESS,
-                    prefixes=(), domain=(),
+                    prefix=(), domain=(),
                 )
 
         while True:
@@ -114,19 +114,19 @@ class Aku(object):
         def recur_literal(item):
             out, keys, values = {}, [], []
 
-            def recur(prefixes, domain, v):
+            def recur(prefix, domain, v):
                 nonlocal keys, values
 
                 if isinstance(v, dict):
                     for x, y in v.items():
                         if x == AKU_FN:
-                            out['-'.join((*prefixes[1:], domain.removesuffix('_')))] = y
+                            out['-'.join((*prefix[1:], domain.removesuffix('_')))] = y
                         elif domain.endswith('_'):
-                            recur(prefixes + (domain.removesuffix('_'),), x, y)
+                            recur(prefix + (domain.removesuffix('_'),), x, y)
                         else:
-                            recur(prefixes, x, y)
+                            recur(prefix, x, y)
                 else:
-                    out['-'.join(prefixes + (domain,))] = v
+                    out['-'.join(prefix + (domain,))] = v
 
             recur((), '', item)
             return out
