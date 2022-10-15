@@ -2,7 +2,7 @@ import functools
 import inspect
 import sys
 from argparse import ArgumentParser, Namespace, SUPPRESS
-from typing import Type
+from typing import Type, List
 
 from aku.formatter import AkuFormatter
 from aku.tp import AkuTp
@@ -39,13 +39,13 @@ class Aku(ArgumentParser):
         self.options.append(fn)
         return fn
 
-    def parse_aku(self, args=None) -> Namespace:
+    def _parse(self, args: List[str] = None, namespace: Namespace = None):
         assert len(self.options) > 0, f'you are supposed to .option at least one callable'
 
         if args is None:
             args = sys.argv[1:]
 
-        namespace, argument_parser = None, self
+        argument_parser = self
         if not self.always_use_subparse and len(self.options) == 1:
             option = self.options[0]
             AkuTp[Type[option]].add_argument(
@@ -94,14 +94,21 @@ class Aku(ArgumentParser):
         for action in argument_parser._actions:
             if action.required is None:
                 action.required = True
-        return argument_parser.parse_args(args=args, namespace=namespace)
+        return args, namespace
+
+    def aku_parse_args(self, args: List[str] = None, namespace: Namespace = None):
+        args, namespace = self._parse(args=args, namespace=namespace)
+        return self.parse_args(args=args, namespace=namespace)
+
+    def aku_parse_known_args(self, args: List[str] = None, namespace: Namespace = None):
+        args, namespace = self._parse(args=args, namespace=namespace)
+        return self.parse_known_args(args=args, namespace=namespace)
 
     def error(self, message: str) -> None:
         raise RuntimeError(message)
 
-    def run(self, namespace: Namespace = None):
-        if namespace is None:
-            namespace = self.parse_aku()
+    def run(self, args: List[str] = None, namespace: Namespace = None):
+        namespace = self.aku_parse_args(args=args, namespace=namespace)
         if isinstance(namespace, Namespace):
             namespace = namespace.__dict__
 
