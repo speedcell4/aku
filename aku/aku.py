@@ -13,23 +13,23 @@ class Aku(object):
     def __init__(self, always_add_subparsers: bool = False) -> None:
         super(Aku, self).__init__()
         self.argument_parser = ArgumentParser()
-        self.registry = []
+        self._registry = []
 
         self.always_add_subparsers = always_add_subparsers
 
     def register(self, fn):
-        self.registry.append(fn)
+        self._registry.append(fn)
         return fn
 
     def _parse(self, args: List[str] = None, namespace: Namespace = None):
-        assert len(self.registry) > 0, f'you are supposed to register at least one callable'
+        assert len(self._registry) > 0, f'you are supposed to register at least one callable'
 
         if args is None:
             args = sys.argv[1:]
 
         argument_parser = self.argument_parser
-        if not self.always_add_subparsers and len(self.registry) == 1:
-            fn = self.registry[0]
+        if not self.always_add_subparsers and len(self._registry) == 1:
+            fn = self._registry[0]
             AkuTp[Type[fn]].add_argument(
                 argument_parser=argument_parser,
                 name=AKU, default=SUPPRESS,
@@ -38,7 +38,7 @@ class Aku(object):
         else:
             subparsers = argument_parser.add_subparsers()
             registry = {}
-            for fn in self.registry:
+            for fn in self._registry:
                 name = get_name(fn)
                 if name not in registry:
                     registry[name] = (fn, subparsers.add_parser(name=name))
