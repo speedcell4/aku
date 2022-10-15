@@ -13,32 +13,31 @@ class Aku(object):
     def __init__(self, always_add_subparsers: bool = False) -> None:
         super(Aku, self).__init__()
         self.argument_parser = ArgumentParser()
-        self.registry = []
+        self._registry = []
 
         self.always_add_subparsers = always_add_subparsers
 
     def register(self, fn):
-        self.registry.append(fn)
+        self._registry.append(fn)
         return fn
 
     def _parse(self, args: List[str] = None, namespace: Namespace = None):
-        assert len(self.registry) > 0, f'you are supposed to register at least one callable'
+        assert len(self._registry) > 0, f'you are supposed to register at least one callable'
 
         if args is None:
             args = sys.argv[1:]
 
         argument_parser = self.argument_parser
-        if not self.always_add_subparsers and len(self.registry) == 1:
-            fn = self.registry[0]
+        if not self.always_add_subparsers and len(self._registry) == 1:
+            fn = self._registry[0]
             AkuTp[Type[fn]].add_argument(
                 argument_parser=argument_parser,
-                name=AKU, default=SUPPRESS,
-                prefixes=(), domain=(),
+                name=AKU, default=SUPPRESS, domain=(),
             )
         else:
             subparsers = argument_parser.add_subparsers()
             registry = {}
-            for fn in self.registry:
+            for fn in self._registry:
                 name = get_name(fn)
                 if name not in registry:
                     registry[name] = (fn, subparsers.add_parser(name=name))
@@ -50,8 +49,7 @@ class Aku(object):
                 fn, argument_parser = registry[arg]
                 AkuTp[Type[fn]].add_argument(
                     argument_parser=argument_parser,
-                    name=AKU, default=SUPPRESS,
-                    prefixes=(), domain=(),
+                    name=AKU, default=SUPPRESS, domain=(),
                 )
 
         while True:
@@ -114,19 +112,19 @@ class Aku(object):
         def recur_literal(item):
             out, keys, values = {}, [], []
 
-            def recur(prefixes, domain, v):
+            def recur(prefix, domain, v):
                 nonlocal keys, values
 
                 if isinstance(v, dict):
                     for x, y in v.items():
                         if x == AKU_FN:
-                            out['-'.join((*prefixes[1:], domain.removesuffix('_')))] = y
+                            out['-'.join((*prefix[1:], domain.removesuffix('_')))] = y
                         elif domain.endswith('_'):
-                            recur(prefixes + (domain.removesuffix('_'),), x, y)
+                            recur(prefix + (domain.removesuffix('_'),), x, y)
                         else:
-                            recur(prefixes, x, y)
+                            recur(prefix, x, y)
                 else:
-                    out['-'.join(prefixes + (domain,))] = v
+                    out['-'.join(prefix + (domain,))] = v
 
             recur((), '', item)
             return out
