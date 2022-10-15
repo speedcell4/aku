@@ -98,14 +98,13 @@ def get_name(tp: Callable) -> str:
         return tp.__class__.__qualname__
 
 
-def join_name(prefix: Tuple[str, ...], name: str) -> str:
-    if name.endswith('_'):
-        name = name[:-1]
-    return '-'.join(prefix + (name,)).lower().replace('_', '-')
-
-
-def join_dest(domain: Tuple[str, ...], name: str) -> str:
+def get_dest(domain: Tuple[str, ...], name: str) -> str:
     return '.'.join(domain + (name,)).lower()
+
+
+def get_option(domain: Tuple[str, ...], name: str) -> str:
+    prefix = tuple(d.removesuffix('_') for d in domain if d.endswith('_'))
+    return '-'.join(prefix + (name.removesuffix('_'),)).lower().replace('_', '-')
 
 
 def get_action_group(argument_parser: ArgumentParser, title: str):

@@ -5,21 +5,21 @@ from aku import Aku
 app = Aku()
 
 
-def foo(x: str):
+def foo(x: str = 'meow'):
     print(f'x => {x}')
 
 
-def bar(fn_: Type[foo] = foo):
-    fn_()
+def bar(a_: Type[foo] = foo):
+    a_()
 
 
-def qux(fn: Type[bar] = bar):
-    fn()
+def qux(b: Type[bar] = bar):
+    b()
 
 
 @app.register
-def quux(fn_: Type[qux] = qux, **kwargs):
-    fn_()
+def quux(c_: Type[qux] = qux, **kwargs):
+    c_()
     print(kwargs['@aku'])
 
 

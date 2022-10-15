@@ -32,8 +32,7 @@ class Aku(object):
             fn = self._registry[0]
             AkuTp[Type[fn]].add_argument(
                 argument_parser=argument_parser,
-                name=AKU, default=SUPPRESS,
-                prefix=(), domain=(),
+                name=AKU, default=SUPPRESS, domain=(),
             )
         else:
             subparsers = argument_parser.add_subparsers()
@@ -50,8 +49,7 @@ class Aku(object):
                 fn, argument_parser = registry[arg]
                 AkuTp[Type[fn]].add_argument(
                     argument_parser=argument_parser,
-                    name=AKU, default=SUPPRESS,
-                    prefix=(), domain=(),
+                    name=AKU, default=SUPPRESS, domain=(),
                 )
 
         while True:
