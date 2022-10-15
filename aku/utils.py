@@ -86,7 +86,7 @@ def iter_annotations(tp):
                 yield name, param.annotation, param.default
 
 
-def renamed(name: str):
+def rename(name: str):
     def wrap(tp: Callable) -> Callable:
         assert not hasattr(tp, AKU_NAME), f'{tp} is already renamed to {getattr(tp, AKU_NAME)}'
         setattr(tp, AKU_NAME, name)

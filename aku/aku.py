@@ -65,7 +65,7 @@ class Aku(ArgumentParser):
         return fn
 
     def parse_aku(self, args=None) -> Namespace:
-        assert len(self.options) > 0
+        assert len(self.options) > 0, f'you are supposed to .option at least one callable'
 
         if args is None:
             args = sys.argv[1:]
