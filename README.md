@@ -27,3 +27,9 @@ python -m pip install aku --upgrade
 * Nested types
     - Function, e.g., `Type[F]`
     - Union of functions, e.g., `Union[Type[F1], Type[F2], Type[F3]]`
+
+## Namespace
+
+* Single leading underline, i.e., `_name`, means omitting this argument from `literal`, while its nested arguments will be kept
+* Double leading underlines, i.e., `__name`, remove this argument and all of its nested arguments
+* Single tailing underline, i.e., `name_`, opens a new namespace for its nested arguments.
