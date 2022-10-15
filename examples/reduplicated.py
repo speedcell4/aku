@@ -22,6 +22,7 @@ def reduplicated(fn1_: Type[foo] = foo, fn2_: Type[bar] = bar, fn3: Type[baz] = 
     print(kwargs['@aku'])
     fn1_()
     fn2_()
+    fn3()
 
 
 if __name__ == '__main__':
