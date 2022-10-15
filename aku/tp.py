@@ -1,13 +1,12 @@
 import functools
 from argparse import ArgumentParser, Action, Namespace, SUPPRESS
-from typing import Union, Tuple, Any
+from typing import Union, Tuple, Any, Literal, get_origin, get_args
 
 from aku.actions import StoreAction, AppendListAction
-from aku.compat import Literal, get_origin, get_args
 from aku.utils import AKU_FN, AKU_DELAY, get_action_group
 from aku.utils import get_name, get_dest, get_option, iter_annotations
-from aku.utils import register_set_type, register_frozenset_type
 from aku.utils import register_homo_tuple_type, register_hetero_tuple_type
+from aku.utils import register_set_type, register_frozenset_type
 
 
 class AkuTp(object):

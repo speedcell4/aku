@@ -28,7 +28,8 @@ def register_type(fn, argument_parser: ArgumentParser):
     return fn
 
 
-def register_homo_tuple_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
+def register_homo_tuple_type(tp: type, argument_parser: ArgumentParser,
+                             pattern: Pattern = re.compile(r',\s*')) -> None:
     def fn(string: str) -> Tuple[tp, ...]:
         nonlocal tp
 
@@ -53,7 +54,8 @@ def register_hetero_tuple_type(tps: Tuple[type, ...], argument_parser: ArgumentP
     return register_type(fn, argument_parser)
 
 
-def register_set_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
+def register_set_type(tp: type, argument_parser: ArgumentParser,
+                      pattern: Pattern = re.compile(r',\s*')) -> None:
     def fn(string: str) -> Set[tp]:
         nonlocal tp
 
@@ -63,7 +65,8 @@ def register_set_type(tp: type, argument_parser: ArgumentParser, pattern: Patter
     return register_type(fn, argument_parser)
 
 
-def register_frozenset_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
+def register_frozenset_type(tp: type, argument_parser: ArgumentParser,
+                            pattern: Pattern = re.compile(r',\s*')) -> None:
     def fn(string: str) -> FrozenSet[tp]:
         nonlocal tp
 
