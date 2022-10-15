@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, S
 from typing import Type
 
 from aku.tp import AkuTp
-from aku.utils import init_argument_parser, fetch_name, AKU_FN, AKU, AKU_DELAY
+from aku.utils import init_argument_parser, get_name, AKU_FN, AKU, AKU_DELAY
 
 
 class AkuFormatter(ArgumentDefaultsHelpFormatter):
@@ -82,7 +82,7 @@ class Aku(ArgumentParser):
             subparsers = argument_parser.add_subparsers()
             options = {}
             for option in self.options:
-                name = fetch_name(option)
+                name = get_name(option)
                 if name not in options:
                     options[name] = (option, subparsers.add_parser(name=name))
                 else:

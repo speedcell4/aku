@@ -2,12 +2,13 @@ import inspect
 import re
 from argparse import ArgumentParser, SUPPRESS
 from inspect import Parameter
-from typing import get_type_hints, Pattern, Tuple, Set, FrozenSet
+from typing import get_type_hints, Pattern, Tuple, Set, FrozenSet, Callable
 
 AKU = '@aku'
 AKU_FN = '@fn'
 AKU_DELAY = '@delay'
 AKU_VISITED = '@visited'
+AKU_NAME = '__aku_name__'
 
 
 def tp_bool(arg_strings: str) -> bool:
@@ -85,11 +86,20 @@ def iter_annotations(tp):
                 yield name, param.annotation, param.default
 
 
-def fetch_name(tp) -> str:
+def renamed(name: str):
+    def wrap(tp: Callable) -> Callable:
+        assert not hasattr(tp, AKU_NAME), f'{tp} is already renamed to {getattr(tp, AKU_NAME)}'
+        setattr(tp, AKU_NAME, name)
+        return tp
+
+    return wrap
+
+
+def get_name(tp: Callable) -> str:
     try:
-        return tp.__qualname__.lower()
+        return getattr(tp, AKU_NAME, tp.__qualname__)
     except AttributeError:
-        return tp.__class__.__qualname__.lower()
+        return tp.__class__.__qualname__
 
 
 def join_name(prefixes: Tuple[str, ...], name: str) -> str:
