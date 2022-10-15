@@ -4,8 +4,8 @@ from typing import Union, Tuple, Any
 
 from aku.actions import StoreAction, AppendListAction
 from aku.compat import Literal, get_origin, get_args
-from aku.utils import AKU_FN, AKU_DELAY, get_action_group
-from aku.utils import register_homo_tuple, register_hetero_tuple, iter_annotations, join_name, join_dest
+from aku.utils import AKU_FN, AKU_DELAY, get_action_group, gen_set_type, gen_frozenset_type
+from aku.utils import gen_homo_tuple_type, register_hetero_tuple, iter_annotations, join_name, join_dest
 
 
 class AkuTp(object):
@@ -86,7 +86,7 @@ class AkuHomoTuple(AkuTp):
         prefixes_name = join_name(prefixes, name)
         argument_parser.add_argument(
             f'--{prefixes_name}', dest=join_dest(domain, name), help=prefixes_name,
-            type=register_homo_tuple(self.tp, argument_parser), choices=self.choices,
+            type=gen_homo_tuple_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
             action=StoreAction, default=default, metavar=f'({self.tp.__name__.lower()}, ...)',
         )
@@ -104,6 +104,42 @@ class AkuHeteroTuple(AkuTp):
             type=register_hetero_tuple(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
             action=StoreAction, default=default, metavar=f'({metavars})',
+        )
+
+
+class AkuSet(AkuTp):
+    def __class_getitem__(cls, tp):
+        tp, origin, args = tp
+        if origin is set:
+            return AkuSet(args[0], None)
+        raise TypeError
+
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
+        prefixes_name = join_name(prefixes, name)
+        argument_parser.add_argument(
+            f'--{prefixes_name}', dest=join_dest(domain, name), help=prefixes_name,
+            type=gen_set_type(self.tp, argument_parser), choices=self.choices,
+            required=None if default == SUPPRESS else False,
+            action=StoreAction, default=default, metavar=f'{{{self.tp.__name__.lower()}}}',
+        )
+
+
+class AkuFrozenSet(AkuTp):
+    def __class_getitem__(cls, tp):
+        tp, origin, args = tp
+        if origin is frozenset:
+            return AkuFrozenSet(args[0], None)
+        raise TypeError
+
+    def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any,
+                     prefixes: Tuple[str, ...], domain: Tuple[str, ...]) -> None:
+        prefixes_name = join_name(prefixes, name)
+        argument_parser.add_argument(
+            f'--{prefixes_name}', dest=join_dest(domain, name), help=prefixes_name,
+            type=gen_frozenset_type(self.tp, argument_parser), choices=self.choices,
+            required=None if default == SUPPRESS else False,
+            action=StoreAction, default=default, metavar=f'frozenset{{{self.tp.__name__.lower()}}}',
         )
 
 

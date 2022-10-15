@@ -2,7 +2,7 @@ import inspect
 import re
 from argparse import ArgumentParser, SUPPRESS
 from inspect import Parameter
-from typing import get_type_hints, Pattern, Tuple
+from typing import get_type_hints, Pattern, Tuple, Set, FrozenSet
 
 AKU = '@aku'
 AKU_FN = '@fn'
@@ -19,7 +19,7 @@ def tp_bool(arg_strings: str) -> bool:
     raise ValueError
 
 
-def register_type(fn, argument_parser: ArgumentParser):
+def gen_type(fn, argument_parser: ArgumentParser):
     tp = get_type_hints(fn)['return']
     registry = argument_parser._registries['type']
     if tp not in registry:
@@ -27,15 +27,34 @@ def register_type(fn, argument_parser: ArgumentParser):
     return fn
 
 
-def register_homo_tuple(tp: type, argument_parser: ArgumentParser,
-                        pattern: Pattern = re.compile(r',\s*')) -> None:
+def gen_homo_tuple_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
     def fn(arg_strings: str) -> Tuple[tp, ...]:
         nonlocal tp
 
         tp = argument_parser._registry_get('type', tp, tp)
         return tuple(tp(arg) for arg in re.split(pattern, arg_strings.strip()))
 
-    return register_type(fn, argument_parser)
+    return gen_type(fn, argument_parser)
+
+
+def gen_set_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(arg_strings: str) -> Set[tp]:
+        nonlocal tp
+
+        tp = argument_parser._registry_get('type', tp, tp)
+        return set(tp(arg) for arg in re.split(pattern, arg_strings.strip()))
+
+    return gen_type(fn, argument_parser)
+
+
+def gen_frozenset_type(tp: type, argument_parser: ArgumentParser, pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(arg_strings: str) -> FrozenSet[tp]:
+        nonlocal tp
+
+        tp = argument_parser._registry_get('type', tp, tp)
+        return frozenset(tp(arg) for arg in re.split(pattern, arg_strings.strip()))
+
+    return gen_type(fn, argument_parser)
 
 
 def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser,
@@ -50,11 +69,11 @@ def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser
             raise ValueError(f'the number of arguments does not match, {len(tps)} != {len(args)}')
         return tuple(tp(arg) for tp, arg in zip(tps, args))
 
-    return register_type(fn, argument_parser)
+    return gen_type(fn, argument_parser)
 
 
 def init_argument_parser(argument_parser: ArgumentParser):
-    register_type(tp_bool, argument_parser)
+    gen_type(tp_bool, argument_parser)
 
 
 def iter_annotations(tp):
