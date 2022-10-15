@@ -18,11 +18,11 @@ def baz(name: str = 'third'):
 
 
 @app.option
-def reduplicated(fn1_: Type[foo] = foo, fn2_: Type[bar] = bar, fn3: Type[baz] = baz, **kwargs):
-    print(kwargs['@aku'])
+def main(fn1_: Type[foo] = foo, fn2_: Type[bar] = bar, fn3: Type[baz] = baz, **kwargs):
     fn1_()
     fn2_()
     fn3()
+    print(kwargs['@aku'])
 
 
 if __name__ == '__main__':
