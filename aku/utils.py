@@ -118,5 +118,5 @@ def get_dest(domain: Tuple[str, ...], name: str) -> str:
 
 
 def get_option(domain: Tuple[str, ...], name: str) -> str:
-    prefix = tuple(d.removesuffix('_') for d in domain if d.endswith('_'))
-    return '-'.join(prefix + (name.removesuffix('_'),)).lower().replace('_', '-')
+    prefix = tuple(d[:-1] for d in domain if d.endswith('_'))
+    return '-'.join(prefix + (name[:-1] if name.endswith('_') else name,)).lower().replace('_', '-')

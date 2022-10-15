@@ -118,9 +118,9 @@ class Aku(object):
                 if isinstance(v, dict):
                     for x, y in v.items():
                         if x == AKU_FN:
-                            out['-'.join((*prefix[1:], domain.removesuffix('_')))] = y
+                            out['-'.join((*prefix[1:], domain[:-1] if domain.endswith('_') else domain))] = y
                         elif domain.endswith('_'):
-                            recur(prefix + (domain.removesuffix('_'),), x, y)
+                            recur(prefix + (domain[:-1],), x, y)
                         else:
                             recur(prefix, x, y)
                 else:

@@ -1,6 +1,7 @@
 from pathlib import Path
+from typing import Literal
 
-from aku import Aku, Literal
+from aku import Aku
 
 app = Aku()
 
@@ -15,8 +16,8 @@ def foo(a: int = 1, b: str = '2', c: bool = True, d: float = 4.0, e: Path = Path
 
 
 @app.register
-def bar(a: Literal['a', 'i', 'u', 'e', 'o'] = 'o'):
-    print(f'a => {a}')
+def bar(name_with_underline: Literal['a', 'i', 'u', 'e', 'o'] = 'o'):
+    print(f'name_with_underline => {name_with_underline}')
 
 
 if __name__ == '__main__':
