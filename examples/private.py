@@ -16,9 +16,9 @@ def bar(c: int = 1, d: int = 2):
 
 
 @app.register
-def main(_: int = 1, _x: Type[foo] = foo, __y: Type[bar] = bar, **kwargs):
-    print(f'_ => {_}')
-    _x()
+def main(x: int = 1, _: Type[foo] = foo, __y: Type[bar] = bar, **kwargs):
+    print(f'x => {x}')
+    _()
     __y()
     print(kwargs['@aku'])
 
