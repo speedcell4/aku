@@ -112,22 +112,23 @@ class Aku(object):
         def recur_literal(item):
             out, keys, values = {}, [], []
 
-            def recur(prefix, domain, v):
+            def recur(prefixes, p, v):
                 nonlocal keys, values
 
-                if domain.startswith('_'):
+                if p.startswith('__'):
                     return
 
                 if isinstance(v, dict):
                     for x, y in v.items():
                         if x == AKU_FN:
-                            out['-'.join((*prefix[1:], domain[:-1] if domain.endswith('_') else domain))] = y
-                        elif domain.endswith('_'):
-                            recur(prefix + (domain[:-1],), x, y)
+                            if not p.startswith('_'):
+                                out['-'.join((*prefixes, p.strip('_')))] = y
+                        elif p.endswith('_') and len(p.strip('_')) > 0:
+                            recur(prefixes + (p.strip('_'),), x, y)
                         else:
-                            recur(prefix, x, y)
-                else:
-                    out['-'.join(prefix + (domain,))] = v
+                            recur(prefixes, x, y)
+                elif not p.startswith('_'):
+                    out['-'.join((*prefixes, p.strip('_')))] = v
 
             recur((), '', item)
             return out

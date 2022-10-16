@@ -27,6 +27,10 @@ class Foo(object):
         print(f'w => {w}')
 
 
+def fred(_: Type[Foo.quux] = Foo.quux, *args, **kwargs):
+    _(*args, **kwargs)
+
+
 class Bar(object):
     def __init__(self, y: str = 'y') -> None:
         super(Bar, self).__init__()
@@ -41,13 +45,19 @@ class Bar(object):
         print(f'w => {w}')
 
 
+def thud(_: Type[Bar.quux] = Bar.quux, *args, **kwargs):
+    _(*args, **kwargs)
+
+
 @app.register
 def main(a: Union[Type[foo], Type[bar]] = foo,
          b: Union[Type[Foo], Type[Bar]] = Foo,
-         c: Union[Type[Foo.qux], Type[Bar.qux]] = Foo.qux, **kwargs):
+         c: Union[Type[Foo.qux], Type[Bar.qux]] = Foo.qux,
+         d: Union[Type[fred], Type[thud]] = fred, **kwargs):
     a()
     b()
     c()
+    d()
     print(kwargs['@aku'])
 
 
