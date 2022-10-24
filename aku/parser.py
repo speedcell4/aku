@@ -16,7 +16,7 @@ class ArgumentParser(_ArgumentParser):
                  fromfile_prefix_chars: str = None,
                  argument_default: Any = None,
                  conflict_handler: str = 'error',
-                 add_help: bool = True,
+                 add_help: bool = False,
                  allow_abbrev: bool = False) -> None:
         super(ArgumentParser, self).__init__(
             prog=prog,

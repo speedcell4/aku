@@ -25,5 +25,11 @@ def foo(x: str = 'wow', y: Union[Type[Foo], Type[Bar]] = Foo):
     print(f'y => {y()}')
 
 
+@app.register
+def bar(x: str = 'wow', y: Union[Type[Foo], Type[Bar]] = Foo):
+    print(f'x => {x}')
+    print(f'y => {y()}')
+
+
 if __name__ == '__main__':
     app.run()

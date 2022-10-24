@@ -10,11 +10,12 @@ from aku.utils import get_name, AKU_FN, AKU, AKU_DELAY
 
 
 class Aku(object):
-    def __init__(self, always_add_subparsers: bool = False) -> None:
+    def __init__(self, add_help: bool = True, always_add_subparsers: bool = False) -> None:
         super(Aku, self).__init__()
         self.argument_parser = ArgumentParser()
         self._registry = []
 
+        self.add_help = add_help
         self.always_add_subparsers = always_add_subparsers
 
     def register(self, fn):
@@ -69,15 +70,22 @@ class Aku(object):
         for action in argument_parser._actions:
             if action.required is None:
                 action.required = True
-        return args, namespace
+
+        if self.add_help:
+            argument_parser.add_argument(
+                '-h', '--help',
+                action='help', default=SUPPRESS,
+                help='show this help message and exit',
+            )
+        return argument_parser, args, namespace
 
     def parse_args(self, args: List[str] = None, namespace: Namespace = None):
-        args, namespace = self._parse(args=args, namespace=namespace)
-        return self.argument_parser.parse_args(args=args, namespace=namespace)
+        argument_parser, args, namespace = self._parse(args=args, namespace=namespace)
+        return argument_parser.parse_args(args=args, namespace=namespace)
 
     def parse_known_args(self, args: List[str] = None, namespace: Namespace = None):
-        args, namespace = self._parse(args=args, namespace=namespace)
-        return self.argument_parser.parse_known_args(args=args, namespace=namespace)
+        argument_parser, args, namespace = self._parse(args=args, namespace=namespace)
+        return argument_parser.parse_known_args(args=args, namespace=namespace)
 
     def run(self, args: List[str] = None, namespace: Namespace = None):
         namespace = self.parse_args(args=args, namespace=namespace)
