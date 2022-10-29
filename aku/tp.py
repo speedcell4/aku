@@ -1,6 +1,6 @@
 import functools
 from argparse import ArgumentParser, Action, Namespace, SUPPRESS
-from typing import Union, Tuple, Any, Literal, get_origin, get_args, Type
+from typing import Union, Tuple, Any, Literal, get_origin, get_args
 
 from aku.actions import StoreAction, AppendListAction
 from aku.utils import AKU_FN, AKU_DELAY, get_action_group
@@ -185,9 +185,9 @@ class AkuFn(AkuTp):
     def add_argument(self, argument_parser: ArgumentParser,
                      name: str, default: Any, domain: Tuple[str, ...]) -> None:
         if name is not None:
-            domain = domain + (name,)
             if name.endswith('_'):
                 _, argument_parser = get_action_group(argument_parser, get_option(domain, name))
+            domain = domain + (name,)
 
         argument_parser.set_defaults(**{get_dest(domain, AKU_FN): (self.tp, get_name(self.tp))})
 

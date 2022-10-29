@@ -19,14 +19,22 @@ class Bar(object):
         print(f'd => {d}')
 
 
+class Baz(object):
+    def __init__(self, e: int = 3, f: float = 4.0, fn: Type[Bar] = Bar) -> None:
+        super(Baz, self).__init__()
+        print(f'e => {e}')
+        print(f'f => {f}')
+        fn()
+
+
 @app.register
-def foo(x: str = 'wow', y: Union[Type[Foo], Type[Bar]] = Foo):
+def foo(x: str = 'wow', y_: Union[Type[Foo], Type[Baz]] = Baz):
     print(f'x => {x}')
     print(f'y => {y()}')
 
 
 @app.register
-def bar(x: str = 'wow', y: Union[Type[Foo], Type[Bar]] = Foo):
+def bar(x: str = 'wow', y_: Union[Type[Foo], Type[Baz]] = Baz):
     print(f'x => {x}')
     print(f'y => {y()}')
 
