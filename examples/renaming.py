@@ -31,15 +31,10 @@ Wow = NewType('Wow', tp=Baz)
 
 
 @app.register
-def foo(x: str = 'wow', y_: Union[Type[Foo], Type[Wow]] = Wow):
+def foo(x: str = 'wow', y_: Union[Type[Foo], Type[Wow]] = Wow, z_: Type[Wow] = Wow):
     print(f'x => {x}')
     print(f'y => {y_()}')
-
-
-@app.register
-def bar(x: str = 'wow', y_: Union[Type[Foo], Type[Wow]] = Wow):
-    print(f'x => {x}')
-    print(f'y => {y_()}')
+    print(f'z => {z_()}')
 
 
 if __name__ == '__main__':

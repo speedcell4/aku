@@ -97,9 +97,6 @@ def get_action_group(argument_parser: ArgumentParser, title: str):
 
 
 def get_name(tp: type) -> str:
-    if hasattr(tp, '__supertype__'):
-        return tp.__name__
-
     try:
         return tp.__qualname__
     except AttributeError:
