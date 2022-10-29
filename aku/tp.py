@@ -1,6 +1,6 @@
 import functools
 from argparse import ArgumentParser, Action, Namespace, SUPPRESS
-from typing import Union, Tuple, Any, Literal, get_origin, get_args
+from typing import Union, Tuple, Any, Literal, get_origin, get_args, Type
 
 from aku.actions import StoreAction, AppendListAction
 from aku.utils import AKU_FN, AKU_DELAY, get_action_group
@@ -10,13 +10,14 @@ from aku.utils import register_set_type, register_frozenset_type
 
 
 class AkuTp(object):
-    def __init__(self, tp, choices):
+    def __init__(self, tp, choices: Any = None, name: str = None) -> None:
         super(AkuTp, self).__init__()
         self.tp = tp
+        self.name = name or get_name(tp=tp)
         self.choices = choices
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.tp.__name__}, {self.choices})'
+        return f'{self.__class__.__name__}({self.name}, {self.choices})'
 
     registry = []
 
@@ -28,7 +29,7 @@ class AkuTp(object):
         args = get_args(tp)
         for aku_tp in cls.registry:
             try:
-                return aku_tp[tp, origin, args]
+                return aku_tp[tp, None, origin, args]
             except TypeError:
                 pass
         raise TypeError(f'unsupported annotation {tp}')
@@ -40,9 +41,9 @@ class AkuTp(object):
 
 class AkuPrimitive(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        tp, name, origin, args = tp
         if origin is None:
-            return AkuPrimitive(tp, None)
+            return AkuPrimitive(tp, name=name)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser,
@@ -51,15 +52,15 @@ class AkuPrimitive(AkuTp):
         argument_parser.add_argument(
             f'--{option}', dest=get_dest(domain, name), help=option,
             type=self.tp, choices=self.choices, required=None if default == SUPPRESS else False,
-            action=StoreAction, default=default, metavar=get_name(self.tp).lower(),
+            action=StoreAction, default=default, metavar=self.name,
         )
 
 
 class AkuList(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        tp, name, origin, args = tp
         if origin is list:
-            return AkuList(args[0], None)
+            return AkuList(args[0], name=name)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser,
@@ -68,18 +69,18 @@ class AkuList(AkuTp):
         argument_parser.add_argument(
             f'--{option}', dest=get_dest(domain, name), help=option,
             type=self.tp, choices=self.choices, required=None if default == SUPPRESS else False,
-            action=AppendListAction, default=default, metavar=f'[{get_name(self.tp).lower()}]',
+            action=AppendListAction, default=default, metavar=f'[{self.name}]',
         )
 
 
 class AkuHomoTuple(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        tp, name, origin, args = tp
         if origin is tuple:
             if len(args) == 2 and args[1] is ...:
-                return AkuHomoTuple(args[0], None)
+                return AkuHomoTuple(args[0], name=name)
             else:
-                return AkuHeteroTuple(args, None)
+                return AkuHeteroTuple(args, name=name)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser,
@@ -89,7 +90,7 @@ class AkuHomoTuple(AkuTp):
             f'--{option}', dest=get_dest(domain, name), help=option,
             type=register_homo_tuple_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
-            action=StoreAction, default=default, metavar=f'({get_name(self.tp).lower()}, ...)',
+            action=StoreAction, default=default, metavar=f'({self.name}, ...)',
         )
 
 
@@ -109,9 +110,9 @@ class AkuHeteroTuple(AkuTp):
 
 class AkuSet(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        tp, name, origin, args = tp
         if origin is set:
-            return AkuSet(args[0], None)
+            return AkuSet(args[0], name=name)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser,
@@ -121,15 +122,15 @@ class AkuSet(AkuTp):
             f'--{option}', dest=get_dest(domain, name), help=option,
             type=register_set_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
-            action=StoreAction, default=default, metavar=f'{{{get_name(self.tp).lower()}}}',
+            action=StoreAction, default=default, metavar=f'{{{self.name}}}',
         )
 
 
 class AkuFrozenSet(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        tp, name, origin, args = tp
         if origin is frozenset:
-            return AkuFrozenSet(args[0], None)
+            return AkuFrozenSet(args[0], name=name)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser,
@@ -139,20 +140,20 @@ class AkuFrozenSet(AkuTp):
             f'--{option}', dest=get_dest(domain, name), help=option,
             type=register_frozenset_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
-            action=StoreAction, default=default, metavar=f'frozenset{{{get_name(self.tp).lower()}}}',
+            action=StoreAction, default=default, metavar=f'frozenset{{{self.name}}}',
         )
 
 
 class AkuLiteral(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        tp, name, origin, args = tp
         if origin is Literal:
             if len(args) > 0:
                 tp = type(args[0])
                 for arg in args:
                     assert get_origin(arg) is None, f'{arg} is not a primitive type'
                     assert isinstance(arg, tp), f'{type(arg)} is not {tp}'
-                return AkuLiteral(tp, args)
+                return AkuLiteral(tp, choices=args, name=name)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser,
@@ -161,25 +162,25 @@ class AkuLiteral(AkuTp):
         argument_parser.add_argument(
             f'--{option}', dest=get_dest(domain, name), help=option,
             type=self.tp, choices=self.choices, required=None if default == SUPPRESS else False,
-            action=StoreAction, default=default, metavar=f'{get_name(self.tp).lower()}{set(self.choices)}',
+            action=StoreAction, default=default, metavar=f'{self.name}{set(self.choices)}',
         )
 
 
 class AkuFn(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        tp, name, origin, args = tp
         if origin is type:
             if len(args) == 1:
                 if get_origin(args[0]) == Union:
-                    return AkuUnion(str, get_args(args[0]))
+                    return AkuUnion(str, choices=get_args(args[0]), name=name)
                 else:
-                    return AkuFn(args[0], None)
+                    return AkuFn(args[0], name=name)
         elif origin is Union:
             args = [
                 get_args(arg)[0]
                 for arg in get_args(tp)
             ]
-            return AkuUnion(str, args)
+            return AkuUnion(str, choices=args, name=name)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser,
@@ -189,7 +190,7 @@ class AkuFn(AkuTp):
                 _, argument_parser = get_action_group(argument_parser, get_option(domain, name))
             domain = domain + (name,)
 
-        argument_parser.set_defaults(**{get_dest(domain, AKU_FN): (self.tp, get_name(self.tp))})
+        argument_parser.set_defaults(**{get_dest(domain, AKU_FN): (self.tp, self.name)})
 
         for name, tp, default in iter_annotations(self.tp):
             AkuTp[tp].add_argument(
@@ -211,7 +212,7 @@ class AkuUnion(AkuTp):
                 self.required = False
 
                 parser.register(AKU_DELAY, domain + (name,), functools.partial(
-                    AkuFn(choices[values], None).add_argument,
+                    AkuFn(choices[values]).add_argument,
                     argument_parser=parser, name=name,
                     domain=domain, default=None,
                 ))
@@ -226,13 +227,13 @@ class AkuUnion(AkuTp):
             )
         else:
             argument_parser.register(AKU_DELAY, domain + (name,), functools.partial(
-                AkuFn(default, None).add_argument,
+                AkuTp[Type[default]].add_argument,
                 argument_parser=argument_parser, name=name,
                 domain=domain, default=None,
             ))
 
             argument_parser.add_argument(
                 f'--{option}', dest=get_dest(domain + (name,), AKU_FN), help=option,
-                type=self.tp, choices=tuple(choices.keys()), required=False, default=(default, default.__name__),
+                type=self.tp, choices=tuple(choices.keys()), required=False, default=(default, get_name(default)),
                 action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
             )

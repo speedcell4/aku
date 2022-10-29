@@ -30,13 +30,13 @@ class Baz(object):
 @app.register
 def foo(x: str = 'wow', y_: Union[Type[Foo], Type[Baz]] = Baz):
     print(f'x => {x}')
-    print(f'y => {y()}')
+    print(f'y => {y_()}')
 
 
 @app.register
 def bar(x: str = 'wow', y_: Union[Type[Foo], Type[Baz]] = Baz):
     print(f'x => {x}')
-    print(f'y => {y()}')
+    print(f'y => {y_()}')
 
 
 if __name__ == '__main__':
