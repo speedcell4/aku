@@ -47,9 +47,9 @@ class AkuTp(object):
 
 class AkuPrimitive(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        t, origin, _ = tp
         if origin is None:
-            return AkuPrimitive(tp)
+            return AkuPrimitive(t)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
@@ -63,9 +63,9 @@ class AkuPrimitive(AkuTp):
 
 class AkuList(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        _, origin, (t, *_) = tp
         if origin is list:
-            return AkuList(args[0])
+            return AkuList(t)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
@@ -79,12 +79,12 @@ class AkuList(AkuTp):
 
 class AkuHomoTuple(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        _, origin, (t, *tps) = tp
         if origin is tuple:
-            if len(args) == 2 and args[1] is ...:
-                return AkuHomoTuple(args[0])
+            if len(tps) == 1 and tps[0] is ...:
+                return AkuHomoTuple(t)
             else:
-                return AkuHeteroTuple(args)
+                return AkuHeteroTuple((t, *tps))
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
@@ -112,9 +112,9 @@ class AkuHeteroTuple(AkuTp):
 
 class AkuSet(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        _, origin, (t, *_) = tp
         if origin is set:
-            return AkuSet(args[0])
+            return AkuSet(t)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
@@ -129,9 +129,9 @@ class AkuSet(AkuTp):
 
 class AkuFrozenSet(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        _, origin, (t, *_) = tp
         if origin is frozenset:
-            return AkuFrozenSet(args[0])
+            return AkuFrozenSet(t)
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
@@ -146,14 +146,13 @@ class AkuFrozenSet(AkuTp):
 
 class AkuLiteral(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        _, origin, (t, *tps) = tp
         if origin is Literal:
-            if len(args) > 0:
-                tp = type(args[0])
-                for arg in args:
-                    assert get_origin(arg) is None, f'{arg} is not a primitive type'
-                    assert isinstance(arg, tp), f'{type(arg)} is not {tp}'
-                return AkuLiteral(tp, choices=args)
+            tp = type(t)
+            for t in (t, *tps):
+                assert get_origin(t) is None, f'{t} is not a primitive type'
+                assert isinstance(t, tp), f'{type(t)} is not {tp}'
+            return AkuLiteral(tp, choices=(t, *tps))
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
@@ -167,19 +166,15 @@ class AkuLiteral(AkuTp):
 
 class AkuFn(AkuTp):
     def __class_getitem__(cls, tp):
-        tp, origin, args = tp
+        _, origin, (t, *tps) = tp
         if origin is type:
-            if len(args) == 1:
-                if get_origin(args[0]) == Union:
-                    return AkuUnion(str, choices=get_args(args[0]))
+            if len(tps) == 0:
+                if get_origin(t) == Union:
+                    return AkuUnion(str, choices=get_args(t))
                 else:
-                    return AkuFn(args[0])
+                    return AkuFn(t)
         elif origin is Union:
-            args = [
-                get_args(arg)[0]
-                for arg in get_args(tp)
-            ]
-            return AkuUnion(str, choices=args)
+            return AkuUnion(str, choices=[get_args(t)[0] for t in (t, *tps)])
         raise TypeError
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
