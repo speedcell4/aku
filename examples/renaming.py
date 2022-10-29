@@ -1,64 +1,40 @@
-from typing import Type, Union
+from typing import Union, Type, NewType
 
 from aku import Aku
 
 app = Aku()
 
 
-def foo(x: str = 'x'):
-    print(f'x => {x}')
-
-
-def bar(x: str = 'x'):
-    print(f'x => {x}')
-
-
 class Foo(object):
-    def __init__(self, y: str = 'y') -> None:
+    def __init__(self, a: int = 1, b: float = 2.0) -> None:
         super(Foo, self).__init__()
-        print(f'y => {y}')
-
-    @classmethod
-    def qux(cls, z: str = 'z') -> None:
-        print(f'z => {z}')
-
-    @classmethod
-    def quux(cls, w: str = 'w') -> None:
-        print(f'w => {w}')
-
-
-def fred(_: Type[Foo.quux] = Foo.quux, *args, **kwargs):
-    _(*args, **kwargs)
+        print(f'a => {a}')
+        print(f'b => {b}')
 
 
 class Bar(object):
-    def __init__(self, y: str = 'y') -> None:
+    def __init__(self, c: int = 3, d: float = 4.0) -> None:
         super(Bar, self).__init__()
-        print(f'y => {y}')
-
-    @classmethod
-    def qux(cls, z: str = 'z') -> None:
-        print(f'z => {z}')
-
-    @classmethod
-    def quux(cls, w: str = 'w') -> None:
-        print(f'w => {w}')
+        print(f'c => {c}')
+        print(f'd => {d}')
 
 
-def thud(_: Type[Bar.quux] = Bar.quux, *args, **kwargs):
-    _(*args, **kwargs)
+class Baz(object):
+    def __init__(self, e: int = 3, f: float = 4.0, fn: Type[Bar] = Bar) -> None:
+        super(Baz, self).__init__()
+        print(f'e => {e}')
+        print(f'f => {f}')
+        fn()
+
+
+Wow = NewType('Wow', tp=Baz)
 
 
 @app.register
-def main(a: Union[Type[foo], Type[bar]] = foo,
-         b: Union[Type[Foo], Type[Bar]] = Foo,
-         c: Union[Type[Foo.qux], Type[Bar.qux]] = Foo.qux,
-         d: Union[Type[fred], Type[thud]] = fred, **kwargs):
-    a()
-    b()
-    c()
-    d()
-    print(kwargs['@aku'])
+def foo(x: str = 'wow', y_: Union[Type[Foo], Type[Wow]] = Wow, z_: Type[Wow] = Wow):
+    print(f'x => {x}')
+    print(f'y => {y_()}')
+    print(f'z => {z_()}')
 
 
 if __name__ == '__main__':
