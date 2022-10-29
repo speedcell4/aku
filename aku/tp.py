@@ -212,7 +212,7 @@ class AkuUnion(AkuTp):
                 self.required = False
 
                 parser.register(AKU_DELAY, domain + (name,), functools.partial(
-                    AkuFn(choices[values]).add_argument,
+                    AkuTp[Type[choices[values]]].add_argument,
                     argument_parser=parser, name=name,
                     domain=domain, default=None,
                 ))
