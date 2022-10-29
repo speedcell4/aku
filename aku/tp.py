@@ -140,7 +140,7 @@ class AkuFrozenSet(AkuTp):
             f'--{option}', dest=get_dest(domain, name), help=option,
             type=register_frozenset_type(self.tp, argument_parser), choices=self.choices,
             required=None if default == SUPPRESS else False,
-            action=StoreAction, default=default, metavar=f'frozenset{{{self.name}}}',
+            action=StoreAction, default=default, metavar=f'frozen{{{self.name}}}',
         )
 
 
@@ -197,8 +197,7 @@ class AkuUnion(AkuTp):
     __class_getitem__ = AkuFn.__class_getitem__
 
     def add_argument(self, argument_parser: ArgumentParser, name: str, default: Any, domain: Tuple[str, ...]) -> None:
-        choices = [AkuTp[c] for c in self.choices]
-        choices = {c.name: c.tp for c in choices}
+        choices = {c.name: c.tp for c in [AkuTp[c] for c in self.choices]}
 
         class UnionAction(Action):
             def __call__(self, parser: ArgumentParser, namespace: Namespace, values, option_string=None):
@@ -219,16 +218,18 @@ class AkuUnion(AkuTp):
                 type=self.tp, choices=tuple(choices.keys()), required=None, default=SUPPRESS,
                 action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
             )
+
         else:
-            default_tp = AkuTp[Type[default]]
+            default = AkuTp[Type[default]]
+
             argument_parser.register(AKU_DELAY, domain + (name,), functools.partial(
-                default_tp.add_argument,
+                default.add_argument,
                 argument_parser=argument_parser, name=name,
                 domain=domain, default=None,
             ))
 
             argument_parser.add_argument(
                 f'--{option}', dest=get_dest(domain + (name,), AKU_FN), help=option,
-                type=self.tp, choices=tuple(choices.keys()), required=False, default=(default_tp.tp, default_tp.name),
+                type=self.tp, choices=tuple(choices.keys()), required=False, default=(default.tp, default.name),
                 action=UnionAction, metavar=f'fn{{{", ".join(choices.keys())}}}'
             )

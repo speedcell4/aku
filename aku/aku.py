@@ -73,8 +73,7 @@ class Aku(object):
 
         if self.add_help:
             argument_parser.add_argument(
-                '-h', '--help',
-                action='help', default=SUPPRESS,
+                '--help', action='help', default=SUPPRESS,
                 help='show this help message and exit',
             )
         return argument_parser, args, namespace
