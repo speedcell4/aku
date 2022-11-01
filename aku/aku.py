@@ -2,7 +2,7 @@ import functools
 import inspect
 import sys
 from argparse import Namespace, SUPPRESS
-from typing import Type, List
+from typing import Type, List, Any, Tuple
 
 from aku.parser import ArgumentParser
 from aku.tp import AkuTp
@@ -78,16 +78,20 @@ class Aku(object):
             )
         return argument_parser, args, namespace
 
-    def parse_args(self, args: List[str] = None, namespace: Namespace = None):
+    def parse_args(self, args: List[str] = None, namespace: Namespace = None) -> Namespace:
         argument_parser, args, namespace = self._parse(args=args, namespace=namespace)
         return argument_parser.parse_args(args=args, namespace=namespace)
 
-    def parse_known_args(self, args: List[str] = None, namespace: Namespace = None):
+    def parse_known_args(self, args: List[str] = None, namespace: Namespace = None) -> Tuple[List[str], Namespace]:
         argument_parser, args, namespace = self._parse(args=args, namespace=namespace)
-        return argument_parser.parse_known_args(args=args, namespace=namespace)
+        namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
+        return args, namespace
 
-    def run(self, args: List[str] = None, namespace: Namespace = None):
+    def run(self, args: List[str] = None, namespace: Namespace = None) -> Any:
         namespace = self.parse_args(args=args, namespace=namespace)
+        return self.execute(namespace=namespace)
+
+    def execute(self, namespace: Namespace) -> Any:
         if isinstance(namespace, Namespace):
             namespace = namespace.__dict__
 
