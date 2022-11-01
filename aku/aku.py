@@ -10,12 +10,14 @@ from aku.utils import get_name, AKU_FN, AKU, AKU_DELAY
 
 
 class Aku(object):
-    def __init__(self, add_help: bool = True, always_add_subparsers: bool = False) -> None:
+    def __init__(self, allow_unknown: bool = False,
+                 always_add_subparsers: bool = False, add_help: bool = True) -> None:
         super(Aku, self).__init__()
         self.argument_parser = ArgumentParser()
         self._registry = []
 
         self.add_help = add_help
+        self.allow_unknown = allow_unknown
         self.always_add_subparsers = always_add_subparsers
 
     def register(self, fn):
@@ -88,7 +90,10 @@ class Aku(object):
         return args, namespace
 
     def run(self, args: List[str] = None, namespace: Namespace = None) -> Any:
-        namespace = self.parse_args(args=args, namespace=namespace)
+        if self.allow_unknown:
+            _, namespace = self.parse_known_args(args=args, namespace=namespace)
+        else:
+            namespace = self.parse_args(args=args, namespace=namespace)
         return self.execute(namespace=namespace)
 
     def execute(self, namespace: Namespace) -> Any:
