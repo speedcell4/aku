@@ -1,5 +1,5 @@
 import functools
-from argparse import ArgumentParser, Action, Namespace, SUPPRESS
+from argparse import ArgumentParser, Action, Namespace, SUPPRESS, ArgumentError
 from typing import Union, Tuple, Any, Literal, get_origin, get_args, Type
 
 from aku.actions import StoreAction, AppendListAction
@@ -187,10 +187,13 @@ class AkuFn(AkuTp):
             argument_parser.set_defaults(**{get_dest(domain, AKU_FN): (self.tp, self.name)})
 
         for name, tp, default in iter_annotations(self.tp):
-            AkuTp[tp].add_argument(
-                argument_parser=argument_parser, name=name,
-                domain=domain, default=default,
-            )
+            try:
+                AkuTp[tp].add_argument(
+                    argument_parser=argument_parser, name=name,
+                    domain=domain, default=default,
+                )
+            except ArgumentError:
+                raise RuntimeError(f'argument --{name}: conflicting option string :: {self.tp}')
 
 
 class AkuUnion(AkuTp):
