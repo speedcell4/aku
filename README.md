@@ -1,6 +1,6 @@
 # Aku
 
-[![Actions Status](https://github.com/speedcell4/aku/workflows/unit-tests/badge.svg)](https://github.com/speedcell4/aku/actions)
+[![Unit Tests](https://github.com/speedcell4/aku/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/speedcell4/aku/actions/workflows/unit-tests.yml)
 [![PyPI version](https://badge.fury.io/py/aku.svg)](https://badge.fury.io/py/aku)
 [![Downloads](https://pepy.tech/badge/aku)](https://pepy.tech/project/aku)
 
@@ -8,7 +8,7 @@ An interactive annotation-driven `ArgumentParser` generator
 
 ## Requirements
 
-* Python 3.7 or higher
+* Python 3.8 or higher
 
 ## Install
 
