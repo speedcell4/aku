@@ -75,9 +75,17 @@ def register_frozenset_type(tp: type, argument_parser: ArgumentParser,
     return register_type(fn, argument_parser)
 
 
-def iter_annotations(tp):
+def iter_annotations(tp, positional_only: bool = False, positional_or_keyword: bool = True, keyword_only: bool = False):
+    kinds = set()
+    if positional_only:
+        kinds.add(Parameter.POSITIONAL_ONLY)
+    if positional_or_keyword:
+        kinds.add(Parameter.POSITIONAL_OR_KEYWORD)
+    if keyword_only:
+        kinds.add(Parameter.KEYWORD_ONLY)
+
     for name, param in inspect.signature(tp).parameters.items():  # type: (str, Parameter)
-        if param.kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.POSITIONAL_ONLY):
+        if param.kind in kinds:
             if param.annotation == inspect.Signature.empty:
                 raise RuntimeError(f'parameter {name} requires an type annotation ({tp})')
 
