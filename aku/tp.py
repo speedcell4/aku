@@ -149,9 +149,9 @@ class AkuLiteral(AkuTp):
         _, origin, (t, *tps) = tp
         if origin is Literal:
             tp = type(t)
-            for t in (t, *tps):
-                assert get_origin(t) is None, f'{t} is not a primitive type'
-                assert isinstance(t, tp), f'{type(t)} is not {tp}'
+            for a in (t, *tps):
+                assert get_origin(a) is None, f'{a} is not a primitive type'
+                assert isinstance(a, tp), f'{type(a)} is not {tp}'
             return AkuLiteral(tp, choices=(t, *tps))
         raise TypeError
 
@@ -160,7 +160,7 @@ class AkuLiteral(AkuTp):
         argument_parser.add_argument(
             f'--{option}', dest=get_dest(domain, name), help=option,
             type=self.tp, choices=self.choices, required=None if default == SUPPRESS else False,
-            action=StoreAction, default=default, metavar=f'{self.name}{set(self.choices)}',
+            action=StoreAction, default=default, metavar=f'{self.name}{{{", ".join(f"{c!r}" for c in self.choices)}}}',
         )
 
 

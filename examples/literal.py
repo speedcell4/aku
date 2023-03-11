@@ -6,7 +6,7 @@ app = Aku()
 
 
 @app.register
-def foo(x: List[Literal['a', 'i', 'u', 'e', 'o']]):
+def foo(x: Literal['a', 'i', 'u', 'e', 'o']):
     print(f'x => {x}')
 
 
