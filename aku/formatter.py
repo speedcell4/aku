@@ -4,6 +4,12 @@ from aku.utils import AKU_FN
 
 
 class AkuFormatter(ArgumentDefaultsHelpFormatter):
+    def __init__(self, prog: str, indent_increment: int = 2, max_help_position: int = 60, width: int = None) -> None:
+        super(AkuFormatter, self).__init__(
+            prog=prog, indent_increment=indent_increment,
+            max_help_position=max_help_position, width=width,
+        )
+
     def _expand_help(self, action):
         params = dict(vars(action), prog=self._prog)
         if params['dest'].endswith(AKU_FN) and isinstance(params['default'], tuple):
