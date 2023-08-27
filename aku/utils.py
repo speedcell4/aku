@@ -1,8 +1,13 @@
 import inspect
 import re
-from argparse import ArgumentParser, SUPPRESS
+from argparse import ArgumentParser
+from argparse import SUPPRESS
 from inspect import Parameter
-from typing import get_type_hints, Pattern, Tuple, Set, FrozenSet
+from typing import FrozenSet
+from typing import Pattern
+from typing import Set
+from typing import Tuple
+from typing import get_type_hints
 
 AKU = '@aku'
 AKU_FN = '@fn'

@@ -1,4 +1,5 @@
-from argparse import ArgumentDefaultsHelpFormatter, SUPPRESS
+from argparse import ArgumentDefaultsHelpFormatter
+from argparse import SUPPRESS
 
 from aku.utils import AKU_FN
 

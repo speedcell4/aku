@@ -1,4 +1,7 @@
-from typing import List, Tuple, Set, FrozenSet
+from typing import FrozenSet
+from typing import List
+from typing import Set
+from typing import Tuple
 
 from aku import Aku
 

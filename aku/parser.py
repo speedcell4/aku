@@ -1,8 +1,10 @@
 from argparse import ArgumentParser as _ArgumentParser
-from typing import Any, Tuple
+from typing import Any
+from typing import Tuple
 
 from aku.formatter import AkuFormatter
-from aku.utils import register_type, bool_type
+from aku.utils import bool_type
+from aku.utils import register_type
 
 
 class ArgumentParser(_ArgumentParser):

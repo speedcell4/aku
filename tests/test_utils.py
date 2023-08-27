@@ -1,5 +1,6 @@
 from aku.utils import get_name
-from tests.utils import func, Class
+from tests.utils import Class
+from tests.utils import func
 
 
 def test_fetch_name():

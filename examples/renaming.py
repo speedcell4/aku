@@ -1,4 +1,6 @@
-from typing import Union, Type, NewType
+from typing import NewType
+from typing import Type
+from typing import Union
 
 from aku import Aku
 

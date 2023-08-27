@@ -1,12 +1,19 @@
 import functools
 import inspect
 import sys
-from argparse import Namespace, SUPPRESS
-from typing import Type, List, Any, Tuple
+from argparse import Namespace
+from argparse import SUPPRESS
+from typing import Any
+from typing import List
+from typing import Tuple
+from typing import Type
 
 from aku.parser import ArgumentParser
 from aku.tp import AkuTp
-from aku.utils import get_name, AKU_FN, AKU, AKU_DELAY
+from aku.utils import AKU
+from aku.utils import AKU_DELAY
+from aku.utils import AKU_FN
+from aku.utils import get_name
 
 
 class Aku(object):

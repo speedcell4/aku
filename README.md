@@ -1,20 +1,18 @@
+<div align="center">
+
 # Aku
 
-[![Unit Tests](https://github.com/speedcell4/aku/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/speedcell4/aku/actions/workflows/unit-tests.yml)
-[![PyPI version](https://badge.fury.io/py/aku.svg)](https://badge.fury.io/py/aku)
-[![Downloads](https://pepy.tech/badge/aku)](https://pepy.tech/project/aku)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/speedcell4/aku/unit-tests.yml?cacheSeconds=0)
+![PyPI - Version](https://img.shields.io/pypi/v/aku?label=pypi%20version&cacheSeconds=0)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/aku?cacheSeconds=0)
+
+</div>
 
 An interactive annotation-driven `ArgumentParser` generator
 
-## Requirements
+## Installation
 
-* Python 3.8 or higher
-
-## Install
-
-```shell script
-python -m pip install aku --upgrade
-```
+`python -m pip aku`
 
 ## Type Annotations
 
@@ -27,9 +25,3 @@ python -m pip install aku --upgrade
 * Nested types
     - Function, e.g., `Type[F]`
     - Union of functions, e.g., `Union[Type[F1], Type[F2], Type[F3]]`
-
-## Namespace
-
-* Single leading underline, i.e., `_name`, means omitting this argument from `literal`, while its nested arguments will be kept
-* Double leading underlines, i.e., `__name`, remove this argument and all of its nested arguments
-* Single tailing underline, i.e., `name_`, opens a new namespace for its nested arguments.
