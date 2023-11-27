@@ -1,11 +1,12 @@
-from aku.utils import fetch_name
-from tests.utils import func, Class
+from aku.utils import get_name
+from tests.utils import Class
+from tests.utils import func
 
 
 def test_fetch_name():
-    assert fetch_name(func) == 'func'
-    assert fetch_name(Class) == 'class'
-    assert fetch_name(Class()) == 'class'
-    assert fetch_name(Class().method) == 'class.method'
-    assert fetch_name(Class.class_method) == 'class.class_method'
-    assert fetch_name(Class.static_method) == 'class.static_method'
+    assert get_name(func).lower() == 'func'
+    assert get_name(Class).lower() == 'class'
+    assert get_name(Class()).lower() == 'class'
+    assert get_name(Class().method).lower() == 'class.method'
+    assert get_name(Class.class_method).lower() == 'class.class_method'
+    assert get_name(Class.static_method).lower() == 'class.static_method'

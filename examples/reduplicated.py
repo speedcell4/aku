@@ -17,12 +17,12 @@ def baz(name: str = 'third'):
     print(f'{baz.__name__}.name => {name}')
 
 
-@app.option
-def reduplicated(fn1_: Type[foo] = foo, fn2_: Type[bar] = bar, fn3: Type[baz] = baz, **kwargs):
+@app.register
+def main(a_: Type[foo] = foo, b_: Type[bar] = bar, c: Type[baz] = baz, **kwargs):
+    a_()
+    b_()
+    c()
     print(kwargs['@aku'])
-    fn1_()
-    fn2_()
-    fn3()
 
 
 if __name__ == '__main__':

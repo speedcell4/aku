@@ -1,100 +1,65 @@
 import functools
 import inspect
 import sys
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, SUPPRESS
+from argparse import Namespace
+from argparse import SUPPRESS
+from typing import Any
+from typing import List
+from typing import Tuple
 from typing import Type
 
+from aku.parser import ArgumentParser
 from aku.tp import AkuTp
-from aku.utils import init_argument_parser, fetch_name, AKU_FN, AKU, AKU_DELAY
+from aku.utils import AKU
+from aku.utils import AKU_DELAY
+from aku.utils import AKU_FN
+from aku.utils import get_name
 
 
-class AkuFormatter(ArgumentDefaultsHelpFormatter):
-    def _expand_help(self, action):
-        params = dict(vars(action), prog=self._prog)
-        if params['dest'].endswith(AKU_FN) and isinstance(params['default'], tuple):
-            params['default'] = params['default'][1]
-        for name in list(params):
-            if params[name] is SUPPRESS:
-                del params[name]
-        for name in list(params):
-            if hasattr(params[name], '__name__'):
-                params[name] = params[name].__name__
-        if params.get('choices') is not None:
-            choices_str = ', '.join([str(c) for c in params['choices']])
-            params['choices'] = choices_str
-        return self._get_help_string(action) % params
+class Aku(object):
+    def __init__(self, allow_unknown: bool = False,
+                 always_add_subparsers: bool = False, add_help: bool = True) -> None:
+        super(Aku, self).__init__()
+        self.argument_parser = ArgumentParser()
+        self._registry = []
 
-    def _format_actions_usage(self, actions, groups):
-        required_option_strings = [
-            action.option_strings[-1][2:]
-            for action in actions if action.required
-        ]
-        if len(required_option_strings) > 0:
-            return f'-- [{"|".join(required_option_strings)}]'
-        return ''
-
-
-class Aku(ArgumentParser):
-    def __init__(self, prog=None,
-                 usage=None,
-                 description=None,
-                 epilog=None,
-                 parents=(),
-                 formatter_class=AkuFormatter,
-                 prefix_chars='-',
-                 fromfile_prefix_chars=None,
-                 argument_default=None,
-                 conflict_handler='error',
-                 add_help=True,
-                 always_use_subparse=False,
-                 allow_abbrev=False) -> None:
-        super(Aku, self).__init__(
-            prog=prog, usage=usage, description=description, epilog=epilog,
-            parents=parents, formatter_class=formatter_class, prefix_chars=prefix_chars,
-            fromfile_prefix_chars=fromfile_prefix_chars, argument_default=argument_default,
-            conflict_handler=conflict_handler, add_help=False, allow_abbrev=allow_abbrev,
-        )
-        init_argument_parser(self)
-
-        self.options = []
         self.add_help = add_help
-        self.always_use_subparse = always_use_subparse
+        self.allow_unknown = allow_unknown
+        self.always_add_subparsers = always_add_subparsers
 
-    def option(self, fn):
-        self.options.append(fn)
+    def register(self, fn):
+        self._registry.append(fn)
         return fn
 
-    def parse_aku(self, args=None) -> Namespace:
-        assert len(self.options) > 0
+    def _parse(self, args: List[str] = None, namespace: Namespace = None):
+        assert len(self._registry) > 0, f'you are supposed to register at least one callable'
 
         if args is None:
             args = sys.argv[1:]
 
-        namespace, argument_parser = None, self
-        if not self.always_use_subparse and len(self.options) == 1:
-            option = self.options[0]
-            AkuTp[Type[option]].add_argument(
+        argument_parser = self.argument_parser
+        if not self.always_add_subparsers and len(self._registry) == 1:
+            fn = self._registry[0]
+            AkuTp[Type[fn]].add_argument(
                 argument_parser=argument_parser,
-                name=AKU, default=SUPPRESS,
-                prefixes=(), domain=(),
+                name=AKU, default=SUPPRESS, domain=(),
             )
         else:
             subparsers = argument_parser.add_subparsers()
-            options = {}
-            for option in self.options:
-                name = fetch_name(option)
-                if name not in options:
-                    options[name] = (option, subparsers.add_parser(name=name))
+            registry = {}
+            for fn in self._registry:
+                name = get_name(fn)
+                if name not in registry:
+                    registry[name] = (fn, subparsers.add_parser(name=name))
                 else:
                     raise ValueError(f'{name} was already registered')
 
-            if len(args) > 0 and args[0] in options:
+            if len(args) > 0 and args[0] in registry:
                 arg, *args = args
-                option, argument_parser = options[arg]
-                AkuTp[Type[option]].add_argument(
+                fn, argument_parser = registry[arg]
+                AkuTp[Type[fn]].add_argument(
                     argument_parser=argument_parser,
-                    name=AKU, default=SUPPRESS,
-                    prefixes=(), domain=(),
+                    name=AKU, default=SUPPRESS, domain=(),
                 )
 
         while True:
@@ -111,22 +76,34 @@ class Aku(ArgumentParser):
                 for name in names:
                     del argument_parser._registries[AKU_DELAY][name]
 
+        for action in argument_parser._actions:
+            if action.required is None:
+                action.required = True
+
         if self.add_help:
             argument_parser.add_argument(
                 '--help', action='help', default=SUPPRESS,
                 help='show this help message and exit',
             )
-        for action in argument_parser._actions:
-            if action.required is None:
-                action.required = True
+        return argument_parser, args, namespace
+
+    def parse_args(self, args: List[str] = None, namespace: Namespace = None) -> Namespace:
+        argument_parser, args, namespace = self._parse(args=args, namespace=namespace)
         return argument_parser.parse_args(args=args, namespace=namespace)
 
-    def error(self, message: str) -> None:
-        raise RuntimeError(message)
+    def parse_known_args(self, args: List[str] = None, namespace: Namespace = None) -> Tuple[List[str], Namespace]:
+        argument_parser, args, namespace = self._parse(args=args, namespace=namespace)
+        namespace, args = argument_parser.parse_known_args(args=args, namespace=namespace)
+        return args, namespace
 
-    def run(self, namespace: Namespace = None):
-        if namespace is None:
-            namespace = self.parse_aku()
+    def run(self, args: List[str] = None, namespace: Namespace = None) -> Any:
+        if self.allow_unknown:
+            _, namespace = self.parse_known_args(args=args, namespace=namespace)
+        else:
+            namespace = self.parse_args(args=args, namespace=namespace)
+        return self.execute(namespace=namespace)
+
+    def execute(self, namespace: Namespace) -> Any:
         if isinstance(namespace, Namespace):
             namespace = namespace.__dict__
 
@@ -158,26 +135,30 @@ class Aku(ArgumentParser):
         def recur_literal(item):
             out, keys, values = {}, [], []
 
-            def recur(prefixes, domain, v):
+            def recur(prefixes, p, v):
                 nonlocal keys, values
+
+                if p.startswith('__'):
+                    return
 
                 if isinstance(v, dict):
                     for x, y in v.items():
                         if x == AKU_FN:
-                            out['-'.join((*prefixes[1:], domain.removesuffix('_')))] = y
-                        elif domain.endswith('_'):
-                            recur(prefixes + (domain.removesuffix('_'),), x, y)
+                            if not p.startswith('_'):
+                                out['-'.join((*prefixes, p.strip('_')))] = y
+                        elif p.endswith('_') and len(p.strip('_')) > 0:
+                            recur(prefixes + (p.strip('_'),), x, y)
                         else:
                             recur(prefixes, x, y)
-                else:
-                    out['-'.join(prefixes + (domain,))] = v
+                elif not p.startswith('_'):
+                    out['-'.join((*prefixes, p.strip('_')))] = v
 
             recur((), '', item)
             return out
 
         partial = recur_partial(partial)
 
-        assert len(partial) == 1
+        assert len(partial) == 1, f'{len(partial)} != 1'
         for _, fn in partial.items():
             if inspect.getfullargspec(fn).varkw is None:
                 return fn()

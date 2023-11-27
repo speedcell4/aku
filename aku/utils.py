@@ -1,8 +1,13 @@
 import inspect
 import re
-from argparse import ArgumentParser, SUPPRESS
+from argparse import ArgumentParser
+from argparse import SUPPRESS
 from inspect import Parameter
-from typing import get_type_hints, Pattern, Tuple
+from typing import FrozenSet
+from typing import Pattern
+from typing import Set
+from typing import Tuple
+from typing import get_type_hints
 
 AKU = '@aku'
 AKU_FN = '@fn'
@@ -10,11 +15,11 @@ AKU_DELAY = '@delay'
 AKU_VISITED = '@visited'
 
 
-def tp_bool(arg_strings: str) -> bool:
-    arg_strings = arg_strings.lower().strip()
-    if arg_strings in ('t', 'true', 'y', 'yes', '1'):
+def bool_type(string: str) -> bool:
+    string = string.lower().strip()
+    if string in ('t', 'true', 'y', 'yes', '1'):
         return True
-    if arg_strings in ('f', 'false', 'n', 'no', '0'):
+    if string in ('f', 'false', 'n', 'no', '0'):
         return False
     raise ValueError
 
@@ -27,24 +32,24 @@ def register_type(fn, argument_parser: ArgumentParser):
     return fn
 
 
-def register_homo_tuple(tp: type, argument_parser: ArgumentParser,
-                        pattern: Pattern = re.compile(r',\s*')) -> None:
-    def fn(arg_strings: str) -> Tuple[tp, ...]:
+def register_homo_tuple_type(tp: type, argument_parser: ArgumentParser,
+                             pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(string: str) -> Tuple[tp, ...]:
         nonlocal tp
 
         tp = argument_parser._registry_get('type', tp, tp)
-        return tuple(tp(arg) for arg in re.split(pattern, arg_strings.strip()))
+        return tuple(tp(arg) for arg in re.split(pattern, string.strip()))
 
     return register_type(fn, argument_parser)
 
 
-def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser,
-                          pattern: Pattern = re.compile(r',\s*')) -> None:
-    def fn(arg_strings: str) -> Tuple[tps]:
+def register_hetero_tuple_type(tps: Tuple[type, ...], argument_parser: ArgumentParser,
+                               pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(string: str) -> Tuple[tps]:
         nonlocal tps
 
         tps = [argument_parser._registry_get('type', tp, tp) for tp in tps]
-        args = re.split(pattern, arg_strings.strip())
+        args = re.split(pattern, string.strip())
 
         if len(tps) != len(args):
             raise ValueError(f'the number of arguments does not match, {len(tps)} != {len(args)}')
@@ -53,34 +58,46 @@ def register_hetero_tuple(tps: Tuple[type, ...], argument_parser: ArgumentParser
     return register_type(fn, argument_parser)
 
 
-def init_argument_parser(argument_parser: ArgumentParser):
-    register_type(tp_bool, argument_parser)
+def register_set_type(tp: type, argument_parser: ArgumentParser,
+                      pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(string: str) -> Set[tp]:
+        nonlocal tp
+
+        tp = argument_parser._registry_get('type', tp, tp)
+        return set(tp(arg) for arg in re.split(pattern, string.strip()))
+
+    return register_type(fn, argument_parser)
 
 
-def iter_annotations(tp):
+def register_frozenset_type(tp: type, argument_parser: ArgumentParser,
+                            pattern: Pattern = re.compile(r',\s*')) -> None:
+    def fn(string: str) -> FrozenSet[tp]:
+        nonlocal tp
+
+        tp = argument_parser._registry_get('type', tp, tp)
+        return frozenset(tp(arg) for arg in re.split(pattern, string.strip()))
+
+    return register_type(fn, argument_parser)
+
+
+def iter_annotations(tp, positional_only: bool = False, positional_or_keyword: bool = True, keyword_only: bool = False):
+    kinds = set()
+    if positional_only:
+        kinds.add(Parameter.POSITIONAL_ONLY)
+    if positional_or_keyword:
+        kinds.add(Parameter.POSITIONAL_OR_KEYWORD)
+    if keyword_only:
+        kinds.add(Parameter.KEYWORD_ONLY)
+
     for name, param in inspect.signature(tp).parameters.items():  # type: (str, Parameter)
-        if param.kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.POSITIONAL_ONLY):
+        if param.kind in kinds:
+            if param.annotation == inspect.Signature.empty:
+                raise RuntimeError(f'parameter {name} requires an type annotation ({tp})')
+
             if param.default == Parameter.empty:
                 yield name, param.annotation, SUPPRESS
             else:
                 yield name, param.annotation, param.default
-
-
-def fetch_name(tp) -> str:
-    try:
-        return tp.__qualname__.lower()
-    except AttributeError:
-        return tp.__class__.__qualname__.lower()
-
-
-def join_name(prefixes: Tuple[str, ...], name: str) -> str:
-    if name.endswith('_'):
-        name = name[:-1]
-    return '-'.join(prefixes + (name,)).lower().replace('_', '-')
-
-
-def join_dest(domain: Tuple[str, ...], name: str) -> str:
-    return '.'.join(domain + (name,)).lower()
 
 
 def get_action_group(argument_parser: ArgumentParser, title: str):
@@ -93,3 +110,19 @@ def get_action_group(argument_parser: ArgumentParser, title: str):
     action_group = argument_parser.add_argument_group(title=title)
     action_group.container = argument_parser
     return argument_parser, action_group
+
+
+def get_name(tp: type) -> str:
+    try:
+        return tp.__qualname__
+    except AttributeError:
+        return tp.__class__.__qualname__
+
+
+def get_dest(domain: Tuple[str, ...], name: str) -> str:
+    return '.'.join(domain + (name,)).lower()
+
+
+def get_option(domain: Tuple[str, ...], name: str) -> str:
+    prefix = tuple(d[:-1] for d in domain if d.endswith('_'))
+    return '-'.join(prefix + (name[:-1] if name.endswith('_') else name,)).lower().replace('_', '-')
