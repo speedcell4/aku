@@ -1,14 +1,16 @@
 <div align="center">
 
-# Aku
+<img src="logo.jpeg" width="360" alt="logo"/>
 
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/speedcell4/aku/unit-tests.yml?cacheSeconds=0)
 ![PyPI - Version](https://img.shields.io/pypi/v/aku?label=pypi%20version&cacheSeconds=0)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/aku?cacheSeconds=0)
 
-</div>
+---
 
 An interactive annotation-driven `ArgumentParser` generator
+
+</div>
 
 ## Installation
 
