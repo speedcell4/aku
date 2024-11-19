@@ -1,14 +1,13 @@
 from argparse import ArgumentParser as _ArgumentParser
-from typing import Any
-from typing import Tuple
+from typing import Any, Tuple
 
 from aku.formatter import AkuFormatter
-from aku.utils import bool_type
-from aku.utils import register_type
+from aku.utils import bool_type, register_type
 
 
 class ArgumentParser(_ArgumentParser):
-    def __init__(self, prog: str = None,
+    def __init__(self,
+                 prog: str = None,
                  usage: str = None,
                  description: str = None,
                  epilog: str = None,

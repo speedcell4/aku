@@ -1,6 +1,4 @@
-from argparse import Action
-from argparse import ArgumentParser
-from argparse import Namespace
+from argparse import Action, ArgumentParser, Namespace
 
 from aku.utils import AKU_VISITED
 
